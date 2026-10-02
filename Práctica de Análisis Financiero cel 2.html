@@ -1,0 +1,952 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<title>Práctica de Análisis Financiero</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:wght@500;700&family=Public+Sans:wght@400;600&family=JetBrains+Mono:wght@400;600&family=Source+Serif+4:ital,wght@0,400;0,700;1,400&display=swap">
+<style>
+/* Layout: cuaderno de trabajo — barra de casos arriba, datos del caso, luego bloques de actividades tipo hoja de cálculo */
+:root{
+  --bg:#f3f5f4; --paper:#ffffff; --fg:#17211d; --muted:#5d6b65; --line:#d6ddd9;
+  --accent:#0f5c4a; --accent-soft:#e1efe9; --ok:#1d7a3a; --ok-soft:#e3f4e7; --bad:#b3261e; --bad-soft:#fbe6e4; --warn:#9a6400;
+  --display:"Bricolage Grotesque", "Segoe UI", system-ui, sans-serif;
+  --body:"Public Sans", "Segoe UI", system-ui, sans-serif;
+  --mono:"JetBrains Mono", ui-monospace, Consolas, monospace;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#101614; --paper:#18201d; --fg:#e4ece8; --muted:#97a69f; --line:#2c3833;
+  --accent:#5cc4a6; --accent-soft:#1c3330; --ok:#6fd58c; --ok-soft:#173022; --bad:#ff8a80; --bad-soft:#3a1d1b; --warn:#f0b54a; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#101614; --paper:#18201d; --fg:#e4ece8; --muted:#97a69f; --line:#2c3833;
+  --accent:#5cc4a6; --accent-soft:#1c3330; --ok:#6fd58c; --ok-soft:#173022; --bad:#ff8a80; --bad-soft:#3a1d1b; --warn:#f0b54a; color-scheme:dark}
+body{background:var(--bg);color:var(--fg);font-family:var(--body);font-size:15px;line-height:1.5}
+.wrap{max-width:1000px;margin:0 auto;padding-inline:16px;padding-block:24px 64px;display:flex;flex-direction:column;gap:24px}
+h1,h2,h3{font-family:var(--display);text-wrap:balance;margin:0}
+h1{font-size:1.9rem}
+h2{font-size:1.35rem}
+h3{font-size:1.05rem}
+.sub{color:var(--muted);margin:4px 0 0}
+.levels{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:8px}
+.lv{all:unset;cursor:pointer;background:var(--paper);border:1px solid var(--line);border-radius:8px;padding:10px 12px;display:flex;flex-direction:column;gap:2px}
+.lv:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.lv .n{font-family:var(--mono);font-size:.75rem;letter-spacing:.06em;text-transform:uppercase;color:var(--muted)}
+.lv .t{font-weight:600}
+.lv .bar{display:flex;gap:3px;margin-top:4px}
+.lv .bar i{width:14px;height:5px;border-radius:2px;background:var(--line)}
+.lv .bar i.on{background:var(--accent)}
+.lv[aria-pressed="true"]{border-color:var(--accent);background:var(--accent-soft)}
+.lv.prof .n{color:var(--warn)}
+.panel{background:var(--paper);border:1px solid var(--line);border-radius:10px;padding:20px;display:flex;flex-direction:column;gap:14px;min-width:0}
+.scroll{overflow-x:auto}
+table{border-collapse:collapse;width:100%;font-variant-numeric:tabular-nums}
+th,td{padding:6px 10px;border-bottom:1px solid var(--line);text-align:right;white-space:nowrap}
+th:first-child,td:first-child{text-align:left;white-space:normal}
+thead th{font-family:var(--mono);font-size:.75rem;text-transform:uppercase;letter-spacing:.05em;color:var(--muted)}
+td.num{font-family:var(--mono)}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+@media (max-width:720px){.grid2{grid-template-columns:1fr}}
+.note{font-size:.9rem;color:var(--muted)}
+.sec-head{display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap}
+.score{font-family:var(--mono);font-size:.85rem;padding:3px 10px;border-radius:99px;background:var(--accent-soft);color:var(--accent)}
+.q td{vertical-align:top}
+.q .lbl{font-weight:600}
+.q .f{display:block;font-size:.8rem;color:var(--muted);font-family:var(--mono);white-space:normal}
+.inp{display:flex;align-items:center;gap:4px;justify-content:flex-end}
+.inp input{width:96px;font-family:var(--mono);font-size:.9rem;padding:5px 7px;border:1px solid var(--line);border-radius:6px;background:var(--bg);color:var(--fg);text-align:right}
+.inp input:focus{outline:2px solid var(--accent);outline-offset:0}
+.inp input.ok{border-color:var(--ok);background:var(--ok-soft)}
+.inp input.bad{border-color:var(--bad);background:var(--bad-soft)}
+.inp .u{font-family:var(--mono);font-size:.8rem;color:var(--muted);width:2.6em;text-align:left}
+.sol{display:block;font-family:var(--mono);font-size:.78rem;color:var(--muted);white-space:normal;text-align:right;margin-top:3px}
+.sol b{color:var(--fg)}
+.btns{display:flex;gap:8px;flex-wrap:wrap}
+button.b{font:inherit;font-weight:600;cursor:pointer;border-radius:7px;padding:8px 14px;border:1px solid var(--accent);background:var(--accent);color:var(--paper)}
+button.b.ghost{background:transparent;color:var(--accent)}
+button.b:focus-visible{outline:2px solid var(--fg);outline-offset:2px}
+textarea{width:100%;box-sizing:border-box;min-height:140px;font:inherit;padding:10px;border:1px solid var(--line);border-radius:8px;background:var(--bg);color:var(--fg)}
+.guide{background:var(--accent-soft);border-radius:8px;padding:12px 16px}
+.guide ul{margin:6px 0 0;padding-left:20px}
+.qtext{margin:0}
+.total{display:flex;gap:16px;align-items:baseline;flex-wrap:wrap}
+.total .big{font-family:var(--display);font-size:2rem}
+@media (prefers-reduced-motion:no-preference){.inp input{transition:background .2s,border-color .2s}.drawer{transition:transform .25s ease}.tbar i{transition:width .1s linear}}
+/* menú lateral */
+.menuBtn{position:fixed;top:calc(env(safe-area-inset-top,0px) + 12px);left:12px;z-index:30;font:600 .85rem var(--mono);cursor:pointer;border-radius:8px;padding:8px 12px;border:1px solid var(--line);background:var(--paper);color:var(--fg)}
+.menuBtn:focus-visible{outline:2px solid var(--accent)}
+.drawer{position:fixed;top:0;left:0;bottom:0;width:250px;z-index:40;background:var(--paper);border-right:1px solid var(--line);padding:calc(env(safe-area-inset-top,0px) + 16px) 14px 16px;display:flex;flex-direction:column;gap:8px;transform:translateX(-105%);box-shadow:4px 0 24px rgba(0,0,0,.12)}
+.drawer.open{transform:none}
+.drawer .hd{display:flex;justify-content:space-between;align-items:center;margin-bottom:8px}
+.drawer .hd b{font-family:var(--display);font-size:1.1rem}
+.nav{all:unset;cursor:pointer;padding:12px;border-radius:8px;display:flex;flex-direction:column;gap:2px;border:1px solid transparent}
+.nav small{color:var(--muted)}
+.nav[aria-current="true"]{background:var(--accent-soft);border-color:var(--accent)}
+.nav:focus-visible{outline:2px solid var(--accent)}
+.shade{position:fixed;inset:0;z-index:35;background:rgba(0,0,0,.3)}
+.wrap{padding-top:64px}
+/* juego */
+.hud{display:grid;grid-template-columns:repeat(auto-fit,minmax(110px,1fr));gap:8px}
+.hud div{background:var(--paper);border:1px solid var(--line);border-radius:8px;padding:8px 12px}
+.hud span{display:block;font:.7rem var(--mono);text-transform:uppercase;letter-spacing:.06em;color:var(--muted)}
+.hud b{font:700 1.4rem var(--display);font-variant-numeric:tabular-nums}
+.hearts{color:var(--bad);letter-spacing:2px}
+.tbar{height:8px;background:var(--line);border-radius:99px;overflow:hidden}
+.tbar i{display:block;height:100%;background:var(--accent)}
+.tbar i.low{background:var(--bad)}
+.formula{font:600 1.2rem var(--mono);background:var(--bg);border:1px solid var(--line);border-radius:8px;padding:12px 14px;overflow-x:auto;white-space:nowrap}
+.chips{display:flex;flex-wrap:wrap;gap:8px}
+.chip{font-family:var(--mono);font-size:.9rem;border:1px solid var(--line);border-radius:6px;padding:6px 10px;background:var(--bg)}
+.chip.unk{border:2px dashed var(--warn);color:var(--warn);font-weight:600}
+.ansrow{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+.ansrow input{font:600 1.1rem var(--mono);padding:9px 12px;width:180px;border-radius:8px;border:1px solid var(--line);background:var(--bg);color:var(--fg)}
+.fb{border-radius:8px;padding:12px 14px}
+.fb.ok{background:var(--ok-soft);color:var(--fg)}
+.fb.bad{background:var(--bad-soft);color:var(--fg)}
+.fb code{font-family:var(--mono)}
+.tier{font:.75rem var(--mono);text-transform:uppercase;letter-spacing:.06em;color:var(--warn)}
+select{font:inherit;padding:8px;border-radius:8px;border:1px solid var(--line);background:var(--bg);color:var(--fg)}
+.cheat td{white-space:normal;text-align:left;font-size:.9rem;vertical-align:middle}
+.cheat td .fx{margin:4px 0}
+/* fórmulas tipográficas */
+.fx{font-family:"Source Serif 4",Cambria,"Times New Roman",serif;font-size:1.08em;display:inline-flex;align-items:center;flex-wrap:wrap;gap:.18em;line-height:1.2}
+.fx .fr{display:inline-flex;flex-direction:column;align-items:center;vertical-align:middle;margin:0 .15em}
+.fx .fr>span{display:flex;align-items:center;gap:.18em;padding:0 .25em}
+.fx .fr>.de{border-top:1.5px solid currentColor;padding-top:.15em}
+.fx .fr>.nu{padding-bottom:.15em}
+.fx i{font-style:italic}
+.fx sub{font-size:.68em;font-style:normal}
+.fx .op{padding:0 .1em}
+.fx .lhs{font-weight:700;color:var(--accent)}
+.formula .fx{font-size:1.25rem}
+.optfx .fx{font-size:1.05rem}
+/* hoja de trabajo */
+.sheet{display:grid;grid-template-columns:auto 1fr auto;gap:6px 8px;align-items:center;font-family:var(--mono);font-size:.88rem}
+.sheet .cl{color:var(--muted);font-weight:600}
+.sheet input{font:inherit;padding:6px 8px;border:1px solid var(--line);border-radius:6px;background:var(--bg);color:var(--fg);min-width:0}
+.sheet .rv{min-width:90px;text-align:right;font-variant-numeric:tabular-nums}
+.sheet .err{color:var(--bad)}
+.calcwrap{display:grid;grid-template-columns:1.2fr 1fr;gap:16px}
+@media (max-width:720px){.calcwrap{grid-template-columns:1fr}}
+.chip.var{cursor:pointer}
+.chip.var:hover{border-color:var(--accent)}
+.ansprev{font-family:var(--mono);color:var(--muted);font-size:.85rem}
+/* ===== Ajustes para celular (iPhone 16 Pro ≈ 402 px) ===== */
+button,.opt,.topt,.lv,.nav,.chip{touch-action:manipulation;-webkit-tap-highlight-color:transparent}
+@media (max-width:600px){
+  body{font-size:16px}
+  .wrap{padding-inline:14px;padding-block:68px 40px;gap:18px}
+  h1{font-size:1.6rem} h2{font-size:1.2rem}
+  .panel{padding:16px 14px;border-radius:12px}
+  .menuBtn{left:calc(env(safe-area-inset-left,0px) + 12px);padding:10px 14px;font-size:.95rem}
+  .drawer{width:min(84vw,320px);padding-bottom:calc(env(safe-area-inset-bottom,0px) + 16px)}
+  .nav{padding:14px}
+  input,select,textarea{font-size:16px!important}
+  select{width:100%}
+  .ansrow{flex-direction:column;align-items:stretch}
+  .ansrow input{width:100%;box-sizing:border-box}
+  button.b{padding:12px 16px;font-size:1rem}
+  .btns{flex-direction:column;align-items:stretch}
+  .btns .score{text-align:center}
+  .levels{grid-template-columns:1fr 1fr}
+  .hud{grid-template-columns:repeat(3,1fr);gap:6px}
+  .hud div{padding:6px 8px}
+  .hud b{font-size:1.15rem}
+  .opt,.topt{min-height:48px;box-sizing:border-box;padding:12px 14px!important;font-size:1rem}
+  .formula{font-size:1rem;padding:10px}
+  .formula .fx{font-size:1.1rem}
+  .chips .chip{font-size:.85rem}
+  .sheet{grid-template-columns:auto 1fr;font-size:.9rem}
+  .sheet .rv{grid-column:2;text-align:left;min-width:0;margin-top:-4px;font-size:.8rem}
+  /* tabla de respuestas de los casos como tarjetas */
+  table.q thead{display:none}
+  table.q,table.q tbody,table.q tr,table.q td{display:block;width:100%;box-sizing:border-box}
+  table.q tr{border-bottom:1px solid var(--line);padding:10px 0}
+  table.q td{border:none;padding:4px 0;white-space:normal}
+  table.q td:not(:first-child){display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap}
+  table.q td:nth-child(2)::before{content:attr(data-n);font-weight:600;color:var(--muted)}
+  table.q td:nth-child(3)::before{content:attr(data-n);font-weight:600;color:var(--muted)}
+  .inp input{width:120px}
+  .sol{text-align:left;width:100%}
+  th,td{padding:6px 8px}
+}
+</style>
+<style>:root{padding:env(safe-area-inset-top,0px) 0 env(safe-area-inset-bottom,0px)}body{margin:0;font-family:var(--body)}img{max-width:100%}[hidden]{display:none!important}</style>
+</head>
+<body>
+
+
+<button class="menuBtn" id="menuBtn" aria-expanded="false" aria-controls="drawer">≡ Menú</button>
+<div class="shade" id="shade" hidden></div>
+<aside class="drawer" id="drawer" aria-label="Secciones">
+  <div class="hd"><b>Secciones</b><button class="b ghost" id="closeBtn" style="padding:4px 10px">Cerrar</button></div>
+  <button class="nav" data-view="casos" aria-current="true"><b>Casos de análisis</b><small>6 casos: niveles 1–5 y la guía del profesor</small></button>
+  <button class="nav" data-view="game"><b>Arena de despejes</b><small>Domina cada fórmula despejando cualquier variable, contra reloj</small></button>
+  <button class="nav" data-view="teo"><b>Banco teórico</b><small>Sistema financiero, BMV vs BIVA, oferta pública, S.A.B. y mercados globales</small></button>
+</aside>
+
+<div class="wrap" id="viewTeo" hidden>
+  <header>
+    <h1>Banco teórico</h1>
+    <p class="sub">Preguntas de opción múltiple sobre los cinco bloques teóricos del parcial. Cada respuesta trae su explicación. Las preguntas que falles quedan guardadas para repasarlas.</p>
+  </header>
+  <section class="panel">
+    <h2>Avance por tema</h2>
+    <div class="levels" id="tTopics"></div>
+    <div class="ansrow">
+      <label for="tMode">Modo</label>
+      <select id="tMode"><option value="study">Estudio (sin tiempo)</option><option value="timed">Contrarreloj (35 s por pregunta)</option></select>
+      <label for="tSet">Preguntas</label>
+      <select id="tSet"><option value="all">Todas del tema</option><option value="10">10 al azar</option><option value="wrong">Solo las que he fallado</option></select>
+      <button class="b" id="tGo">Comenzar</button>
+      <button class="b ghost" id="tReset">Reiniciar avance</button>
+    </div>
+  </section>
+  <section class="panel" id="tCard" hidden></section>
+</div>
+
+<div class="wrap" id="viewGame" hidden>
+  <header>
+    <h1>Arena de despejes</h1>
+    <p class="sub">Opción múltiple contra reloj, sin calculadora. Elige la fórmula correcta, el despeje correcto, hacia dónde se mueve un indicador o qué significa en contexto. Cada 5 aciertos subes de nivel y se desbloquean fórmulas y preguntas más difíciles.</p>
+  </header>
+  <section class="panel" id="gStart">
+    <h2>Configura la partida</h2>
+    <div class="ansrow">
+      <label for="gType">Tipo de reto</label>
+      <select id="gType">
+        <option value="mix">Combinado (todos los tipos)</option>
+        <option value="name">1 · Identificar el indicador</option>
+        <option value="eq">2 · Elegir la fórmula correcta</option>
+        <option value="des">3 · Despejes</option>
+        <option value="dir">4 · Sensibilidad (sube / baja)</option>
+        <option value="ctx">5 · Interpretación y contexto</option>
+        <option value="calc">6 · Cálculo con hoja de trabajo</option>
+      </select>
+      <label for="gMode">Tema</label>
+      <select id="gMode">
+        <option value="prog">Todos, progresivo (sube de nivel)</option>
+        <option value="A">Solo rentabilidad y márgenes</option>
+        <option value="B">Solo liquidez, deuda y efectivo</option>
+        <option value="C">Solo capital de trabajo</option>
+        <option value="D">Solo valuación bursátil</option>
+        <option value="all">Todo mezclado, máxima dificultad</option>
+      </select>
+      <label for="gDiff">Tiempo</label>
+      <select id="gDiff"><option value="1.3">Tranquilo</option><option value="1" selected>Normal</option><option value="0.7">Rápido</option></select>
+      <button class="b" id="gGo">Comenzar</button>
+    </div>
+    <p class="note">3 vidas. Pierdes una vida si fallas o se acaba el tiempo. Puntos = 100 + bono por segundos restantes, multiplicado por tu racha. Récord: <b id="gBest">0</b> puntos.</p>
+  </section>
+  <div class="hud" id="gHud" hidden>
+    <div><span>Puntos</span><b id="hPts">0</b></div>
+    <div><span>Nivel</span><b id="hLvl">1</b></div>
+    <div><span>Racha</span><b id="hStk">x1</b></div>
+    <div><span>Vidas</span><b class="hearts" id="hLives">♥♥♥</b></div>
+    <div><span>Tiempo</span><b id="hTime">0</b></div>
+  </div>
+  <section class="panel" id="gCard" hidden></section>
+  <section class="panel">
+    <div class="sec-head"><h3>Tabla de despejes</h3><button class="b ghost" id="cheatBtn">Mostrar</button></div>
+    <div class="scroll" id="cheat" hidden></div>
+  </section>
+</div>
+
+<div class="wrap" id="viewCasos">
+  <header>
+    <h1>Práctica de Análisis Financiero</h1>
+    <p class="sub">Finanzas Bursátiles · UVM · Seis casos de dos emisoras ficticias (cifras en millones de pesos, salvo precio y UPA). Los niveles 1 a 5 suben de dificultad; el 6 es la guía del profesor.</p>
+  </header>
+
+  <nav class="levels" id="levels" aria-label="Casos"></nav>
+
+  <section class="panel" id="caseHead"></section>
+  <div id="sections" style="display:flex;flex-direction:column;gap:24px"></div>
+
+  <section class="panel">
+    <div class="total"><h2>Resultado del caso</h2><span class="big" id="tot">0 / 0</span></div>
+    <p class="note">Captura porcentajes como número (12.5 = 12.5 %). Se aceptan comas de miles. Tolerancia: ±0.1 puntos en %, ±0.02 en veces, ±0.5 días y ±1 % en pesos. Usa saldos promedio [(2025 + 2026) / 2] donde se indique y un año de 365 días.</p>
+    <div class="btns"><button class="b ghost" id="resetBtn">Borrar respuestas del caso</button></div>
+  </section>
+</div>
+
+<script>
+const CASES = [
+ {lvl:1, title:"Gamma Alimentos vs Delta Textil", tag:"Crecimiento y márgenes", secs:["A"],
+  intro:"Dos emisoras medianas. Practica lo básico: crecimiento, márgenes, ROA, ROE y DuPont.",
+  names:["Gamma","Delta"],
+  d:[{v25:5000,v26:5600,cv25:3000,cv26:3300,e25:1000,e26:1150,ebit25:800,ebit26:920,i25:100,i26:110,un25:450,un26:520,ef:400,cxc:600,inv:700,ac:1900,pc:1100,at:6000,pt:3000,cc:3000,deuda:1800,fo:700,capex:400,acc:100,precio:60,cxc25:550,inv25:650,cxp25:500,cxp26:560,at25:5600,cc25:2700},
+     {v25:4000,v26:4200,cv25:2600,cv26:2770,e25:700,e26:720,ebit25:520,ebit26:530,i25:90,i26:100,un25:300,un26:295,ef:250,cxc:700,inv:900,ac:1950,pc:1300,at:5000,pt:2900,cc:2100,deuda:1900,fo:380,capex:300,acc:80,precio:45,cxc25:640,inv25:820,cxp25:480,cxp26:520,at25:4800,cc25:2000}],
+  rec:["Gamma crece más rápido y con mejores márgenes; Delta casi no crece y su utilidad neta cae.","Compara si el mayor ROE viene de margen, rotación o apalancamiento (DuPont)."]},
+ {lvl:2, title:"Épsilon Farma vs Zeta Construcción", tag:"+ Liquidez, deuda y efectivo", secs:["A","B"],
+  intro:"Una emisora rentable y poco endeudada frente a otra que crece en ventas pero se apalanca y genera poco efectivo.",
+  names:["Épsilon","Zeta"],
+  d:[{v25:8000,v26:8800,cv25:4000,cv26:4300,e25:2400,e26:2700,ebit25:2000,ebit26:2250,i25:200,i26:210,un25:1250,un26:1400,ef:1200,cxc:1100,inv:900,ac:3500,pc:1800,at:12000,pt:5000,cc:7000,deuda:3000,fo:2000,capex:800,acc:250,precio:110,cxc25:1000,inv25:850,cxp25:700,cxp26:760,at25:11000,cc25:6400},
+     {v25:9000,v26:10500,cv25:7000,cv26:8300,e25:1500,e26:1650,ebit25:1100,ebit26:1180,i25:450,i26:600,un25:420,un26:380,ef:300,cxc:2600,inv:1800,ac:5000,pc:4600,at:14000,pt:10800,cc:3200,deuda:6500,fo:300,capex:900,acc:150,precio:40,cxc25:2100,inv25:1500,cxp25:1400,cxp26:1700,at25:12500,cc25:3000}],
+  rec:["Zeta crece más en ventas, pero su utilidad neta cae y sus intereses suben: crecimiento sin rentabilidad.","Zeta tiene flujo libre negativo: la utilidad no se convierte en efectivo.","Épsilon tiene cobertura de intereses alta y deuda neta/EBITDA baja."]},
+ {lvl:3, title:"Eta Retail vs Theta Manufactura", tag:"+ Capital de trabajo", secs:["A","B","C"],
+  intro:"Un minorista que cobra de contado y paga tarde a proveedores frente a un fabricante que da crédito a sus clientes. El ciclo de conversión de efectivo cuenta otra historia que los márgenes.",
+  names:["Eta","Theta"],
+  d:[{v25:20000,v26:22000,cv25:15000,cv26:16600,e25:2200,e26:2450,ebit25:1500,ebit26:1650,i25:250,i26:280,un25:850,un26:930,ef:800,cxc:500,inv:3200,ac:4800,pc:5200,at:16000,pt:10000,cc:6000,deuda:3500,fo:2100,capex:1200,acc:400,precio:38,cxc25:450,inv25:2900,cxp25:3300,cxp26:3700,at25:15000,cc25:5500},
+     {v25:11000,v26:12100,cv25:7700,cv26:8500,e25:1900,e26:2050,ebit25:1400,ebit26:1500,i25:300,i26:320,un25:760,un26:800,ef:600,cxc:2400,inv:2600,ac:6000,pc:3500,at:15000,pt:8000,cc:7000,deuda:4500,fo:900,capex:700,acc:280,precio:42,cxc25:2200,inv25:2400,cxp25:900,cxp26:1000,at25:14000,cc25:6600}],
+  rec:["Eta tiene margen bajo pero alta rotación de activos; su razón circulante < 1 es normal en retail porque sus proveedores la financian.","Theta tiene mejor margen, pero un ciclo de conversión mucho más largo amarra efectivo en clientes e inventario."]},
+ {lvl:4, title:"Iota Telecom vs Kappa Minería", tag:"Análisis completo + valuación", secs:["A","B","C","D","E"],
+  intro:"Caso completo con valuación bursátil. Una telecom muy intensiva en capital y endeudada frente a una minera en ciclo alto de precios.",
+  names:["Iota","Kappa"],
+  d:[{v25:25000,v26:26500,cv25:11000,cv26:11700,e25:10000,e26:10600,ebit25:5000,ebit26:5200,i25:1800,i26:1900,un25:2100,un26:2150,ef:2500,cxc:3000,inv:800,ac:7000,pc:6500,at:60000,pt:40000,cc:20000,deuda:28000,fo:8500,capex:6000,acc:1000,precio:32,cxc25:2800,inv25:750,cxp25:2400,cxp26:2600,at25:57000,cc25:19200},
+     {v25:14000,v26:17500,cv25:8000,cv26:9500,e25:4500,e26:6200,ebit25:3300,ebit26:4800,i25:400,i26:350,un25:1900,un26:2900,ef:3000,cxc:1500,inv:2000,ac:7500,pc:3000,at:30000,pt:11000,cc:19000,deuda:6000,fo:5200,capex:3500,acc:500,precio:70,cxc25:1300,inv25:1800,cxp25:1100,cxp26:1250,at25:27000,cc25:16500}],
+  rec:["Iota: margen EBITDA alto pero gran diferencia con el EBIT (depreciación) y deuda neta/EBITDA elevada.","Kappa: utilidades muy ligadas al precio de los metales; un P/U bajo puede reflejar utilidades en un pico del ciclo.","Dato a investigar: precio de los metales, vencimientos de deuda de Iota, capex de mantenimiento vs expansión."]},
+ {lvl:5, title:"Lambda Tech vs Mu Aerolínea", tag:"Experto: casos atípicos", secs:["A","B","C","D","E"],
+  intro:"Casos con trampas: una emisora con más efectivo que deuda (deuda neta negativa) y otra con pérdida neta, capital contable muy delgado y razón circulante menor a 1. Interpreta los signos con cuidado.",
+  names:["Lambda","Mu"],
+  d:[{v25:6000,v26:7800,cv25:1800,cv26:2300,e25:1800,e26:2500,ebit25:1500,ebit26:2100,i25:20,i26:15,un25:1100,un26:1550,ef:4000,cxc:1600,inv:200,ac:6200,pc:1500,at:14000,pt:3500,cc:10500,deuda:800,fo:2300,capex:600,acc:200,precio:230,cxc25:1100,inv25:180,cxp25:300,cxp26:380,at25:11500,cc25:9000},
+     {v25:18000,v26:19000,cv25:13500,cv26:15400,e25:3000,e26:2600,ebit25:1300,ebit26:700,i25:700,i26:850,un25:300,un26:-150,ef:1500,cxc:900,inv:400,ac:3500,pc:7000,at:28000,pt:25500,cc:2500,deuda:14000,fo:2200,capex:2800,acc:600,precio:9,cxc25:850,inv25:380,cxp25:2200,cxp26:2500,at25:27000,cc25:2700}],
+  rec:["Lambda: deuda neta negativa (caja neta) y alto crecimiento, pero el P/U y EV/EBITDA son exigentes: el mercado ya descuenta crecimiento.","Mu: pérdida neta → P/U negativo no es interpretable; la cobertura de intereses < 1 indica que el EBIT no alcanza para pagar intereses.","Ojo: las cuentas por cobrar de Lambda crecen mucho más que sus ventas; revisar calidad de las ventas."]},
+ {lvl:6, title:"Alfa Industrial vs Beta Comercial", tag:"Guía del profesor", prof:true, secs:["A","B","C","D","E"],
+  intro:"Caso didáctico de la guía del primer parcial. Objetivo: decidir cuál presenta una posición financiera más sólida y cuál parece tener una valuación más exigente.",
+  names:["Alfa","Beta"],
+  d:[{v25:12000,v26:13500,cv25:7200,cv26:8370,e25:2700,e26:3100,ebit25:2100,ebit26:2295,i25:450,i26:540,un25:1200,un26:1300,ef:900,cxc:1800,inv:2100,ac:4800,pc:3000,at:18000,pt:10500,cc:7500,deuda:6000,fo:1400,capex:900,acc:300,precio:65,cxc25:1600,inv25:1900,cxp25:1600,cxp26:1800,at25:15000,cc25:6900},
+     {v25:10000,v26:11500,cv25:6500,cv26:7130,e25:1900,e26:2350,ebit25:1500,ebit26:1840,i25:300,i26:420,un25:1000,un26:1050,ef:400,cxc:1300,inv:2500,ac:4200,pc:2800,at:13000,pt:8400,cc:4600,deuda:5000,fo:650,capex:800,acc:200,precio:85,cxc25:1200,inv25:2300,cxp25:1400,cxp26:1700,at25:10000,cc25:4000}],
+  rec:["Compara la fuente del ROE con DuPont: un ROE mayor puede venir del apalancamiento y no del margen.","Revisa si el flujo libre es positivo en ambas y la deuda neta/EBITDA.","Compara P/U y EV/EBITDA para ver cuál cotiza con una valuación más exigente."]}
+];
+
+const avg=(a,b)=>(a+b)/2;
+const fmt=(x,dec=2)=>isFinite(x)?x.toLocaleString("es-MX",{minimumFractionDigits:dec,maximumFractionDigits:dec}):"n/d";
+const M = {
+ A:{title:"A. Crecimiento y rentabilidad", q:[
+  {id:"gv",l:"1. Crecimiento de ventas",u:"%",f:"(Ventas26 / Ventas25 − 1) × 100",c:d=>(d.v26/d.v25-1)*100,x:d=>`(${fmt(d.v26,0)} / ${fmt(d.v25,0)} − 1) × 100`},
+  {id:"ge",l:"1. Crecimiento de EBITDA",u:"%",f:"(EBITDA26 / EBITDA25 − 1) × 100",c:d=>(d.e26/d.e25-1)*100,x:d=>`(${fmt(d.e26,0)} / ${fmt(d.e25,0)} − 1) × 100`},
+  {id:"gu",l:"1. Crecimiento de utilidad neta",u:"%",f:"(UN26 − UN25) / |UN25| × 100",c:d=>(d.un26-d.un25)/Math.abs(d.un25)*100,x:d=>`(${fmt(d.un26,0)} − ${fmt(d.un25,0)}) / ${fmt(Math.abs(d.un25),0)} × 100`},
+  {id:"mb",l:"2. Margen bruto 2026",u:"%",f:"(Ventas − Costo de ventas) / Ventas",c:d=>(d.v26-d.cv26)/d.v26*100,x:d=>`(${fmt(d.v26,0)} − ${fmt(d.cv26,0)}) / ${fmt(d.v26,0)}`},
+  {id:"me",l:"2. Margen EBITDA 2026",u:"%",f:"EBITDA / Ventas",c:d=>d.e26/d.v26*100,x:d=>`${fmt(d.e26,0)} / ${fmt(d.v26,0)}`},
+  {id:"mo",l:"2. Margen operativo 2026",u:"%",f:"EBIT / Ventas",c:d=>d.ebit26/d.v26*100,x:d=>`${fmt(d.ebit26,0)} / ${fmt(d.v26,0)}`},
+  {id:"mn",l:"2. Margen neto 2026",u:"%",f:"Utilidad neta / Ventas",c:d=>d.un26/d.v26*100,x:d=>`${fmt(d.un26,0)} / ${fmt(d.v26,0)}`},
+  {id:"roa",l:"3. ROA (activo promedio)",u:"%",f:"UN26 / [(AT25 + AT26) / 2]",c:d=>d.un26/avg(d.at25,d.at)*100,x:d=>`${fmt(d.un26,0)} / ${fmt(avg(d.at25,d.at),0)}`},
+  {id:"roe",l:"3. ROE (capital promedio)",u:"%",f:"UN26 / [(CC25 + CC26) / 2]",c:d=>d.un26/avg(d.cc25,d.cc)*100,x:d=>`${fmt(d.un26,0)} / ${fmt(avg(d.cc25,d.cc),0)}`},
+  {id:"rot",l:"4. DuPont: rotación de activos",u:"x",f:"Ventas26 / Activo promedio",c:d=>d.v26/avg(d.at25,d.at),x:d=>`${fmt(d.v26,0)} / ${fmt(avg(d.at25,d.at),0)}`},
+  {id:"mul",l:"4. DuPont: multiplicador del capital",u:"x",f:"Activo promedio / Capital promedio",c:d=>avg(d.at25,d.at)/avg(d.cc25,d.cc),x:d=>`${fmt(avg(d.at25,d.at),0)} / ${fmt(avg(d.cc25,d.cc),0)}`}
+ ], open:"4b. Explica por qué una empresa puede tener mayor ROE sin tener mayor margen neto.",
+  guide:["ROE = margen neto × rotación × multiplicador: tres palancas distintas.","Más rotación (vende más por cada peso de activo) o más apalancamiento (más deuda por peso de capital) elevan el ROE aunque el margen sea menor.","El ROE impulsado por deuda implica más riesgo financiero."]},
+ B:{title:"B. Liquidez, deuda y efectivo", q:[
+  {id:"rc",l:"5. Razón circulante",u:"x",f:"Activo circulante / Pasivo circulante",c:d=>d.ac/d.pc,x:d=>`${fmt(d.ac,0)} / ${fmt(d.pc,0)}`},
+  {id:"pa",l:"5. Prueba ácida",u:"x",f:"(Activo circulante − Inventarios) / Pasivo circulante",c:d=>(d.ac-d.inv)/d.pc,x:d=>`(${fmt(d.ac,0)} − ${fmt(d.inv,0)}) / ${fmt(d.pc,0)}`},
+  {id:"pt",l:"5. Pasivo total / Activo total",u:"%",f:"Pasivo total / Activo total",c:d=>d.pt/d.at*100,x:d=>`${fmt(d.pt,0)} / ${fmt(d.at,0)}`},
+  {id:"ci",l:"5. Cobertura de intereses",u:"x",f:"EBIT / Gastos por intereses",c:d=>d.ebit26/d.i26,x:d=>`${fmt(d.ebit26,0)} / ${fmt(d.i26,0)}`},
+  {id:"dn",l:"6. Deuda financiera neta / EBITDA",u:"x",f:"(Deuda financiera − Efectivo) / EBITDA",c:d=>(d.deuda-d.ef)/d.e26,x:d=>`(${fmt(d.deuda,0)} − ${fmt(d.ef,0)}) / ${fmt(d.e26,0)}`},
+  {id:"fcf",l:"7. Flujo de efectivo libre",u:"$",f:"Flujo operativo − Inversión en activos fijos",c:d=>d.fo-d.capex,x:d=>`${fmt(d.fo,0)} − ${fmt(d.capex,0)}`}
+ ], open:"7b. ¿La utilidad neta se convirtió en efectivo disponible?",
+  guide:["Compara el flujo libre contra la utilidad neta (FCF / UN).","Si el FCF es mucho menor que la UN, la utilidad quedó atrapada en cuentas por cobrar, inventarios o inversión.","Un FCF negativo obliga a financiarse con deuda o capital."]},
+ C:{title:"C. Administración del capital de trabajo", q:[
+  {id:"dc",l:"8. Días de cobro",u:"d",f:"CxC promedio / Ventas × 365",c:d=>avg(d.cxc25,d.cxc)/d.v26*365,x:d=>`${fmt(avg(d.cxc25,d.cxc),0)} / ${fmt(d.v26,0)} × 365`},
+  {id:"di",l:"9. Días de inventario",u:"d",f:"Inventario promedio / Costo de ventas × 365",c:d=>avg(d.inv25,d.inv)/d.cv26*365,x:d=>`${fmt(avg(d.inv25,d.inv),0)} / ${fmt(d.cv26,0)} × 365`},
+  {id:"dp",l:"10. Días de pago",u:"d",f:"Proveedores promedio / Costo de ventas × 365",c:d=>avg(d.cxp25,d.cxp26)/d.cv26*365,x:d=>`${fmt(avg(d.cxp25,d.cxp26),0)} / ${fmt(d.cv26,0)} × 365`},
+  {id:"ccc",l:"11. Ciclo de conversión de efectivo",u:"d",f:"Días cobro + Días inventario − Días pago",c:d=>avg(d.cxc25,d.cxc)/d.v26*365+avg(d.inv25,d.inv)/d.cv26*365-avg(d.cxp25,d.cxp26)/d.cv26*365,x:()=>"cobro + inventario − pago"}
+ ]},
+ D:{title:"D. Valuación bursátil", q:[
+  {id:"upa",l:"12. Utilidad por acción (UPA)",u:"$",f:"Utilidad neta / Acciones en circulación",c:d=>d.un26/d.acc,x:d=>`${fmt(d.un26,0)} / ${fmt(d.acc,0)}`},
+  {id:"pu",l:"12. Precio / Utilidad (P/U)",u:"x",f:"Precio por acción / UPA",c:d=>d.precio/(d.un26/d.acc),x:d=>`${fmt(d.precio,2)} / ${fmt(d.un26/d.acc,2)}`},
+  {id:"cap",l:"12. Capitalización bursátil",u:"$",f:"Precio × Acciones",c:d=>d.precio*d.acc,x:d=>`${fmt(d.precio,2)} × ${fmt(d.acc,0)}`},
+  {id:"ev",l:"12. Valor empresa (EV)",u:"$",f:"Capitalización + Deuda financiera − Efectivo",c:d=>d.precio*d.acc+d.deuda-d.ef,x:d=>`${fmt(d.precio*d.acc,0)} + ${fmt(d.deuda,0)} − ${fmt(d.ef,0)}`},
+  {id:"eve",l:"12. EV / EBITDA",u:"x",f:"EV / EBITDA 2026",c:d=>(d.precio*d.acc+d.deuda-d.ef)/d.e26,x:d=>`${fmt(d.precio*d.acc+d.deuda-d.ef,0)} / ${fmt(d.e26,0)}`}
+ ]},
+ E:{title:"E. Recomendación analítica", q:[], open:"13. Redacta una recomendación analítica: al menos dos fortalezas, dos riesgos y un dato adicional que investigarías antes de invertir. No basta con elegir la empresa con el ROE más alto.",
+  guide:["Fortalezas: crecimiento con margen, flujo libre positivo, cobertura de intereses holgada, ciclo de efectivo corto.","Riesgos: apalancamiento (multiplicador, deuda neta/EBITDA), FCF débil, valuación exigente (P/U, EV/EBITDA altos).","Dato adicional: vencimientos de deuda, guía de la emisora, comparables del sector, dividendos, calidad de cuentas por cobrar."]}
+};
+
+const ROWS=[["Ventas","v"],["Costo de ventas","cv"],["EBITDA","e"],["Utilidad operativa (EBIT)","ebit"],["Gastos por intereses","i"],["Utilidad neta","un"]];
+const BAL=[["Efectivo","ef"],["Cuentas por cobrar","cxc"],["Inventarios","inv"],["Activo circulante","ac"],["Pasivo circulante","pc"],["Activo total","at"],["Pasivo total","pt"],["Capital contable","cc"],["Deuda financiera","deuda"],["Cuentas por pagar a proveedores","cxp26"],["Flujo de efectivo operativo 2026","fo"],["Inversión en activos fijos 2026","capex"],["Acciones en circulación (millones)","acc"],["Precio por acción al cierre ($)","precio"]];
+const B25=[["Cuentas por cobrar","cxc25"],["Inventarios","inv25"],["Cuentas por pagar a proveedores","cxp25"],["Activo total","at25"],["Capital contable","cc25"]];
+
+let cur=0; const store={};
+function ld(){try{return JSON.parse(localStorage.getItem("pfa")||"{}")}catch(e){return {}}}
+function sv(){try{localStorage.setItem("pfa",JSON.stringify(store))}catch(e){}}
+Object.assign(store,ld());
+
+function tol(u,v){return u==="%"?0.1:u==="x"?0.02:u==="d"?0.5:Math.max(Math.abs(v)*0.01,0.01)}
+function parseN(s){if(s==null)return NaN;s=String(s).replace(/[%,$\s]/g,"").replace(/x$/i,"");if(s==="")return NaN;return Number(s)}
+function dec(u){return u==="$"?2:2}
+
+function renderLevels(){
+  const nav=document.getElementById("levels");nav.innerHTML="";
+  CASES.forEach((c,i)=>{
+    const b=document.createElement("button");b.className="lv"+(c.prof?" prof":"");b.setAttribute("aria-pressed",i===cur);
+    b.innerHTML=`<span class="n">${c.prof?"Caso 6 · Profesor":"Nivel "+c.lvl}</span><span class="t">${c.tag}</span><span class="bar">${[1,2,3,4,5].map(k=>`<i class="${k<=Math.min(c.lvl,5)?"on":""}"></i>`).join("")}</span>`;
+    b.onclick=()=>{cur=i;render();window.scrollTo({top:0})};nav.appendChild(b);
+  });
+}
+function dataTables(c){
+  const [a,b]=c.d,[na,nb]=c.names;
+  const n=x=>fmt(x,Number.isInteger(x)?0:2);
+  return `<div class="scroll"><table><thead><tr><th>Concepto</th><th>${na} 2025</th><th>${na} 2026</th><th>${nb} 2025</th><th>${nb} 2026</th></tr></thead><tbody>
+  ${ROWS.map(([l,k])=>`<tr><td>${l}</td><td class="num">${n(a[k+"25"])}</td><td class="num">${n(a[k+"26"])}</td><td class="num">${n(b[k+"25"])}</td><td class="num">${n(b[k+"26"])}</td></tr>`).join("")}</tbody></table></div>
+  <div class="grid2"><div class="scroll"><table><thead><tr><th>Al cierre de 2026</th><th>${na}</th><th>${nb}</th></tr></thead><tbody>
+  ${BAL.map(([l,k])=>`<tr><td>${l}</td><td class="num">${n(a[k])}</td><td class="num">${n(b[k])}</td></tr>`).join("")}</tbody></table></div>
+  <div class="scroll"><table><thead><tr><th>Saldos al cierre de 2025</th><th>${na}</th><th>${nb}</th></tr></thead><tbody>
+  ${B25.map(([l,k])=>`<tr><td>${l}</td><td class="num">${n(a[k])}</td><td class="num">${n(b[k])}</td></tr>`).join("")}</tbody></table>
+  <p class="note">Úsalos para calcular promedios: (saldo 2025 + saldo 2026) / 2.</p></div></div>`;
+}
+function render(){
+  renderLevels();
+  const c=CASES[cur];store[cur]=store[cur]||{};
+  document.getElementById("caseHead").innerHTML=`<div><span class="score">${c.prof?"Guía del profesor":"Nivel "+c.lvl+" de 5"}</span></div><h2>${c.title}</h2><p class="qtext">${c.intro}</p>${dataTables(c)}`;
+  const box=document.getElementById("sections");box.innerHTML="";
+  c.secs.forEach(sk=>{
+    const s=M[sk];const p=document.createElement("section");p.className="panel";
+    let h=`<div class="sec-head"><h3>${s.title}</h3>${s.q.length?`<span class="score" id="sc-${sk}">—</span>`:""}</div>`;
+    if(sk==="C")h+=`<p class="note">Usa saldos promedio y un año de 365 días.</p>`;
+    if(s.q.length){
+      h+=`<div class="scroll"><table class="q"><thead><tr><th>Indicador</th><th>${c.names[0]}</th><th>${c.names[1]}</th></tr></thead><tbody>`;
+      s.q.forEach(q=>{h+=`<tr><td><span class="lbl">${q.l}</span><span class="f">${fx(q.f)}</span></td>`+[0,1].map(j=>{const id=`${cur}-${q.id}-${j}`;const v=store[cur][id]??"";return `<td data-n="${c.names[j]}"><div class="inp"><input id="i${id}" data-k="${id}" data-q="${q.id}" data-j="${j}" data-s="${sk}" inputmode="decimal" value="${String(v).replace(/"/g,"")}" aria-label="${q.l} ${c.names[j]}"><span class="u">${q.u==="%"?"%":q.u==="x"?"veces":q.u==="d"?"días":"$"}</span></div><span class="sol" id="s${id}" hidden></span></td>`}).join("")+`</tr>`});
+      h+=`</tbody></table></div><div class="btns"><button class="b" data-chk="${sk}">Revisar</button><button class="b ghost" data-sol="${sk}">Ver solución con procedimiento</button></div>`;
+    }
+    if(s.open){const k=`${cur}-open-${sk}`;h+=`<label for="t${k}"><p class="qtext"><b>${s.open}</b></p></label><textarea id="t${k}" data-open="${k}" placeholder="Escribe tu respuesta…">${(store[cur][k]||"").replace(/</g,"&lt;")}</textarea>
+      <div class="btns"><button class="b ghost" data-guide="${sk}">Ver puntos clave</button></div>
+      <div class="guide" id="g-${sk}" hidden><b>Lo que debe incluir tu respuesta</b><ul>${s.guide.map(x=>`<li>${x}</li>`).join("")}${sk==="E"?c.rec.map(x=>`<li><i>En este caso:</i> ${x}</li>`).join(""):""}</ul></div>`}
+    p.innerHTML=h;box.appendChild(p);
+  });
+  box.querySelectorAll("input").forEach(el=>el.addEventListener("input",()=>{store[cur][el.dataset.k]=el.value;el.classList.remove("ok","bad");sv()}));
+  box.querySelectorAll("textarea").forEach(el=>el.addEventListener("input",()=>{store[cur][el.dataset.open]=el.value;sv()}));
+  box.querySelectorAll("[data-chk]").forEach(b=>b.onclick=()=>check(b.dataset.chk,false));
+  box.querySelectorAll("[data-sol]").forEach(b=>b.onclick=()=>check(b.dataset.sol,true));
+  box.querySelectorAll("[data-guide]").forEach(b=>b.onclick=()=>{const g=document.getElementById("g-"+b.dataset.guide);g.hidden=!g.hidden});
+  updTotal();
+}
+function evalQ(sk,j,q){const c=CASES[cur];const real=q.c(c.d[j]);const id=`${cur}-${q.id}-${j}`;const v=parseN(store[cur][id]);return {real,id,v,ok:isFinite(v)&&Math.abs(v-real)<=tol(q.u,real)}}
+function check(sk,show){
+  const c=CASES[cur];let ok=0,n=0;
+  M[sk].q.forEach(q=>[0,1].forEach(j=>{
+    const r=evalQ(sk,j,q);n++;if(r.ok)ok++;
+    const inp=document.getElementById("i"+r.id);inp.classList.remove("ok","bad");
+    if(isFinite(r.v))inp.classList.add(r.ok?"ok":"bad");
+    const s=document.getElementById("s"+r.id);
+    const unit=q.u==="%"?" %":q.u==="x"?" x":q.u==="d"?" días":"";
+    const val=(q.u==="$"?"$":"")+fmt(r.real,2)+unit;
+    if(show){s.innerHTML=`${q.x(c.d[j])} = <b>${val}</b>`;s.hidden=false}
+    else if(isFinite(r.v)&&!r.ok){s.innerHTML="Revisa: no coincide";s.hidden=false}else s.hidden=true;
+  }));
+  document.getElementById("sc-"+sk).textContent=`${ok} / ${n}`;updTotal();
+}
+function updTotal(){const c=CASES[cur];let ok=0,n=0;c.secs.forEach(sk=>M[sk].q.forEach(q=>[0,1].forEach(j=>{n++;if(evalQ(sk,j,q).ok)ok++})));document.getElementById("tot").textContent=`${ok} / ${n}`}
+document.getElementById("resetBtn").onclick=()=>{store[cur]={};sv();render()};
+render();
+
+/* ===== Menú lateral ===== */
+const drawer=document.getElementById("drawer"),shade=document.getElementById("shade"),menuBtn=document.getElementById("menuBtn");
+function setDrawer(o){drawer.classList.toggle("open",o);shade.hidden=!o;menuBtn.setAttribute("aria-expanded",o)}
+menuBtn.onclick=()=>setDrawer(!drawer.classList.contains("open"));
+shade.onclick=()=>setDrawer(false);document.getElementById("closeBtn").onclick=()=>setDrawer(false);
+document.querySelectorAll(".nav").forEach(b=>b.onclick=()=>{
+  const v=b.dataset.view;document.querySelectorAll(".nav").forEach(x=>x.setAttribute("aria-current",x===b));
+  document.getElementById("viewCasos").hidden=v!=="casos";document.getElementById("viewGame").hidden=v!=="game";document.getElementById("viewTeo").hidden=v!=="teo";
+  setDrawer(false);window.scrollTo({top:0});
+});
+
+/* ===== Arena de despejes ===== */
+const R=(a,b,d=0)=>{const x=a+Math.random()*(b-a);const p=10**d;return Math.round(x*p)/p};
+// Cada fórmula: variables de entrada (con generador), salida calculada, y el despeje de cada variable.
+const F=[
+ {id:"mn",cat:"A",t:1,name:"Margen neto",eq:"MN = UN / Ventas × 100",
+  vars:[{k:"UN",u:"$",g:()=>R(100,3000)},{k:"Ventas",u:"$",g:v=>R(v.UN*4,v.UN*15)}],out:{k:"MN",u:"%"},calc:v=>v.UN/v.Ventas*100,
+  des:{MN:"MN = UN / Ventas × 100",UN:"UN = (MN / 100) × Ventas",Ventas:"Ventas = UN / (MN / 100)"}},
+ {id:"mb",cat:"A",t:1,name:"Margen bruto",eq:"MB = (Ventas − CV) / Ventas × 100",
+  vars:[{k:"Ventas",u:"$",g:()=>R(2000,20000)},{k:"CV",u:"$",g:v=>R(v.Ventas*.4,v.Ventas*.85)}],out:{k:"MB",u:"%"},calc:v=>(v.Ventas-v.CV)/v.Ventas*100,
+  des:{MB:"MB = (Ventas − CV) / Ventas × 100",Ventas:"Ventas = CV / (1 − MB/100)",CV:"CV = Ventas × (1 − MB/100)"}},
+ {id:"me",cat:"A",t:1,name:"Margen EBITDA",eq:"ME = EBITDA / Ventas × 100",
+  vars:[{k:"Ventas",u:"$",g:()=>R(2000,20000)},{k:"EBITDA",u:"$",g:v=>R(v.Ventas*.08,v.Ventas*.4)}],out:{k:"ME",u:"%"},calc:v=>v.EBITDA/v.Ventas*100,
+  des:{ME:"ME = EBITDA / Ventas × 100",EBITDA:"EBITDA = (ME/100) × Ventas",Ventas:"Ventas = EBITDA / (ME/100)"}},
+ {id:"roa",cat:"A",t:1,name:"ROA",eq:"ROA = UN / Activo prom × 100",
+  vars:[{k:"UN",u:"$",g:()=>R(200,3000)},{k:"ATprom",u:"$",g:v=>R(v.UN*8,v.UN*25)}],out:{k:"ROA",u:"%"},calc:v=>v.UN/v.ATprom*100,
+  des:{ROA:"ROA = UN / ATprom × 100",UN:"UN = (ROA/100) × ATprom",ATprom:"ATprom = UN / (ROA/100)"}},
+ {id:"roe",cat:"A",t:1,name:"ROE",eq:"ROE = UN / Capital prom × 100",
+  vars:[{k:"UN",u:"$",g:()=>R(200,3000)},{k:"CCprom",u:"$",g:v=>R(v.UN*3,v.UN*10)}],out:{k:"ROE",u:"%"},calc:v=>v.UN/v.CCprom*100,
+  des:{ROE:"ROE = UN / CCprom × 100",UN:"UN = (ROE/100) × CCprom",CCprom:"CCprom = UN / (ROE/100)"}},
+ {id:"rc",cat:"B",t:1,name:"Razón circulante",eq:"RC = AC / PC",
+  vars:[{k:"AC",u:"$",g:()=>R(1000,9000)},{k:"PC",u:"$",g:v=>R(v.AC*.4,v.AC*1.3)}],out:{k:"RC",u:"x"},calc:v=>v.AC/v.PC,
+  des:{RC:"RC = AC / PC",AC:"AC = RC × PC",PC:"PC = AC / RC"}},
+ {id:"pa",cat:"B",t:1,name:"Prueba ácida",eq:"PA = (AC − Inv) / PC",
+  vars:[{k:"AC",u:"$",g:()=>R(1000,9000)},{k:"Inv",u:"$",g:v=>R(v.AC*.15,v.AC*.6)},{k:"PC",u:"$",g:v=>R(v.AC*.4,v.AC*1.2)}],out:{k:"PA",u:"x"},calc:v=>(v.AC-v.Inv)/v.PC,
+  des:{PA:"PA = (AC − Inv) / PC",AC:"AC = PA × PC + Inv",Inv:"Inv = AC − PA × PC",PC:"PC = (AC − Inv) / PA"}},
+ {id:"ci",cat:"B",t:1,name:"Cobertura de intereses",eq:"Cob = EBIT / Intereses",
+  vars:[{k:"Int",u:"$",g:()=>R(50,900)},{k:"EBIT",u:"$",g:v=>R(v.Int*1.2,v.Int*9)}],out:{k:"Cob",u:"x"},calc:v=>v.EBIT/v.Int,
+  des:{Cob:"Cob = EBIT / Int",EBIT:"EBIT = Cob × Int",Int:"Int = EBIT / Cob"}},
+ {id:"fcf",cat:"B",t:1,name:"Flujo de efectivo libre",eq:"FCF = Flujo operativo − Capex",
+  vars:[{k:"FO",u:"$",g:()=>R(200,6000)},{k:"Capex",u:"$",g:v=>R(v.FO*.3,v.FO*1.4)}],out:{k:"FCF",u:"$"},calc:v=>v.FO-v.Capex,
+  des:{FCF:"FCF = FO − Capex",FO:"FO = FCF + Capex",Capex:"Capex = FO − FCF"}},
+ {id:"ptat",cat:"B",t:1,name:"Pasivo total / Activo total",eq:"PT/AT = PT / AT × 100",
+  vars:[{k:"AT",u:"$",g:()=>R(3000,40000)},{k:"PT",u:"$",g:v=>R(v.AT*.25,v.AT*.85)}],out:{k:"PTAT",u:"%"},calc:v=>v.PT/v.AT*100,
+  des:{PTAT:"PT/AT = PT / AT × 100",PT:"PT = (PT/AT ÷ 100) × AT",AT:"AT = PT / (PT/AT ÷ 100)"}},
+ {id:"upa",cat:"D",t:1,name:"Utilidad por acción",eq:"UPA = UN / Acciones",
+  vars:[{k:"UN",u:"$",g:()=>R(200,4000)},{k:"Acc",u:"mill",g:()=>R(80,900)}],out:{k:"UPA",u:"$"},calc:v=>v.UN/v.Acc,
+  des:{UPA:"UPA = UN / Acc",UN:"UN = UPA × Acc",Acc:"Acc = UN / UPA"}},
+ {id:"pu",cat:"D",t:1,name:"Precio / Utilidad",eq:"P/U = Precio / UPA",
+  vars:[{k:"UPA",u:"$",g:()=>R(1,15,2)},{k:"Precio",u:"$",g:v=>R(v.UPA*6,v.UPA*30,2)}],out:{k:"PU",u:"x"},calc:v=>v.Precio/v.UPA,
+  des:{PU:"P/U = Precio / UPA",Precio:"Precio = P/U × UPA",UPA:"UPA = Precio / (P/U)"}},
+ {id:"cap",cat:"D",t:1,name:"Capitalización bursátil",eq:"Cap = Precio × Acciones",
+  vars:[{k:"Precio",u:"$",g:()=>R(10,150,2)},{k:"Acc",u:"mill",g:()=>R(80,900)}],out:{k:"Cap",u:"$"},calc:v=>v.Precio*v.Acc,
+  des:{Cap:"Cap = Precio × Acc",Precio:"Precio = Cap / Acc",Acc:"Acc = Cap / Precio"}},
+ // Nivel 2
+ {id:"g",cat:"A",t:2,name:"Crecimiento anual",eq:"g = (X26 / X25 − 1) × 100",
+  vars:[{k:"X25",u:"$",g:()=>R(1000,15000)},{k:"X26",u:"$",g:v=>R(v.X25*.85,v.X25*1.35)}],out:{k:"g",u:"%"},calc:v=>(v.X26/v.X25-1)*100,
+  des:{g:"g = (X26 / X25 − 1) × 100",X26:"X26 = X25 × (1 + g/100)",X25:"X25 = X26 / (1 + g/100)"}},
+ {id:"prom",cat:"C",t:2,name:"Saldo promedio",eq:"Prom = (S25 + S26) / 2",
+  vars:[{k:"S25",u:"$",g:()=>R(500,15000)},{k:"S26",u:"$",g:v=>R(v.S25*.8,v.S25*1.3)}],out:{k:"Prom",u:"$"},calc:v=>(v.S25+v.S26)/2,
+  des:{Prom:"Prom = (S25 + S26) / 2",S25:"S25 = 2 × Prom − S26",S26:"S26 = 2 × Prom − S25"}},
+ {id:"rot",cat:"A",t:2,name:"Rotación de activos",eq:"Rot = Ventas / ATprom",
+  vars:[{k:"Ventas",u:"$",g:()=>R(3000,25000)},{k:"ATprom",u:"$",g:v=>R(v.Ventas*.5,v.Ventas*2.5)}],out:{k:"Rot",u:"x"},calc:v=>v.Ventas/v.ATprom,
+  des:{Rot:"Rot = Ventas / ATprom",Ventas:"Ventas = Rot × ATprom",ATprom:"ATprom = Ventas / Rot"}},
+ {id:"mul",cat:"A",t:2,name:"Multiplicador del capital",eq:"Mult = ATprom / CCprom",
+  vars:[{k:"CCprom",u:"$",g:()=>R(1000,12000)},{k:"ATprom",u:"$",g:v=>R(v.CCprom*1.3,v.CCprom*4)}],out:{k:"Mult",u:"x"},calc:v=>v.ATprom/v.CCprom,
+  des:{Mult:"Mult = ATprom / CCprom",ATprom:"ATprom = Mult × CCprom",CCprom:"CCprom = ATprom / Mult"}},
+ {id:"dc",cat:"C",t:2,name:"Días de cobro",eq:"DC = CxCprom / Ventas × 365",
+  vars:[{k:"Ventas",u:"$",g:()=>R(3000,25000)},{k:"CxCprom",u:"$",g:v=>R(v.Ventas*.04,v.Ventas*.25)}],out:{k:"DC",u:"d"},calc:v=>v.CxCprom/v.Ventas*365,
+  des:{DC:"DC = CxCprom / Ventas × 365",CxCprom:"CxCprom = DC × Ventas / 365",Ventas:"Ventas = CxCprom × 365 / DC"}},
+ {id:"di",cat:"C",t:2,name:"Días de inventario",eq:"DI = Invprom / CV × 365",
+  vars:[{k:"CV",u:"$",g:()=>R(2000,18000)},{k:"Invprom",u:"$",g:v=>R(v.CV*.05,v.CV*.35)}],out:{k:"DI",u:"d"},calc:v=>v.Invprom/v.CV*365,
+  des:{DI:"DI = Invprom / CV × 365",Invprom:"Invprom = DI × CV / 365",CV:"CV = Invprom × 365 / DI"}},
+ {id:"dp",cat:"C",t:2,name:"Días de pago",eq:"DP = CxPprom / CV × 365",
+  vars:[{k:"CV",u:"$",g:()=>R(2000,18000)},{k:"CxPprom",u:"$",g:v=>R(v.CV*.05,v.CV*.3)}],out:{k:"DP",u:"d"},calc:v=>v.CxPprom/v.CV*365,
+  des:{DP:"DP = CxPprom / CV × 365",CxPprom:"CxPprom = DP × CV / 365",CV:"CV = CxPprom × 365 / DP"}},
+ {id:"dn",cat:"B",t:2,name:"Deuda neta / EBITDA",eq:"DN/EBITDA = (Deuda − Efectivo) / EBITDA",
+  vars:[{k:"EBITDA",u:"$",g:()=>R(500,8000)},{k:"Ef",u:"$",g:v=>R(v.EBITDA*.1,v.EBITDA*.8)},{k:"Deuda",u:"$",g:v=>R(v.Ef+v.EBITDA*.3,v.Ef+v.EBITDA*3.5)}],out:{k:"DNE",u:"x"},calc:v=>(v.Deuda-v.Ef)/v.EBITDA,
+  des:{DNE:"DN/EBITDA = (Deuda − Ef) / EBITDA",Deuda:"Deuda = DN/EBITDA × EBITDA + Ef",Ef:"Ef = Deuda − DN/EBITDA × EBITDA",EBITDA:"EBITDA = (Deuda − Ef) / (DN/EBITDA)"}},
+ {id:"ev",cat:"D",t:2,name:"Valor empresa",eq:"EV = Cap + Deuda − Efectivo",
+  vars:[{k:"Cap",u:"$",g:()=>R(3000,40000)},{k:"Deuda",u:"$",g:()=>R(500,15000)},{k:"Ef",u:"$",g:v=>R(100,v.Deuda*.6)}],out:{k:"EV",u:"$"},calc:v=>v.Cap+v.Deuda-v.Ef,
+  des:{EV:"EV = Cap + Deuda − Ef",Cap:"Cap = EV − Deuda + Ef",Deuda:"Deuda = EV − Cap + Ef",Ef:"Ef = Cap + Deuda − EV"}},
+ // Nivel 3: varias etapas
+ {id:"dupont",cat:"A",t:3,name:"DuPont",eq:"ROE = MN × Rot × Mult   (MN y ROE en %)",
+  vars:[{k:"MN",u:"%",g:()=>R(3,20,2)},{k:"Rot",u:"x",g:()=>R(.4,2.2,2)},{k:"Mult",u:"x",g:()=>R(1.3,4,2)}],out:{k:"ROE",u:"%"},calc:v=>v.MN*v.Rot*v.Mult,
+  des:{ROE:"ROE = MN × Rot × Mult",MN:"MN = ROE / (Rot × Mult)",Rot:"Rot = ROE / (MN × Mult)",Mult:"Mult = ROE / (MN × Rot)"}},
+ {id:"ccc",cat:"C",t:3,name:"Ciclo de conversión de efectivo",eq:"CCE = DC + DI − DP",
+  vars:[{k:"DC",u:"d",g:()=>R(15,90,1)},{k:"DI",u:"d",g:()=>R(20,120,1)},{k:"DP",u:"d",g:()=>R(20,100,1)}],out:{k:"CCE",u:"d"},calc:v=>v.DC+v.DI-v.DP,
+  des:{CCE:"CCE = DC + DI − DP",DC:"DC = CCE − DI + DP",DI:"DI = CCE − DC + DP",DP:"DP = DC + DI − CCE"}},
+ {id:"roe2",cat:"A",t:3,name:"ROE con saldos de cierre",eq:"ROE = UN / [(CC25 + CC26) / 2] × 100",
+  vars:[{k:"UN",u:"$",g:()=>R(200,3000)},{k:"CC25",u:"$",g:v=>R(v.UN*3,v.UN*9)},{k:"CC26",u:"$",g:v=>R(v.CC25*.95,v.CC25*1.25)}],out:{k:"ROE",u:"%"},calc:v=>v.UN/((v.CC25+v.CC26)/2)*100,
+  des:{ROE:"ROE = UN / [(CC25 + CC26)/2] × 100",UN:"UN = (ROE/100) × (CC25 + CC26)/2",CC25:"CC25 = 2 × UN / (ROE/100) − CC26",CC26:"CC26 = 2 × UN / (ROE/100) − CC25"}},
+ {id:"dc2",cat:"C",t:3,name:"Días de cobro con saldos de cierre",eq:"DC = [(CxC25 + CxC26) / 2] / Ventas × 365",
+  vars:[{k:"Ventas",u:"$",g:()=>R(3000,25000)},{k:"CxC25",u:"$",g:v=>R(v.Ventas*.05,v.Ventas*.2)},{k:"CxC26",u:"$",g:v=>R(v.CxC25*.9,v.CxC25*1.3)}],out:{k:"DC",u:"d"},calc:v=>(v.CxC25+v.CxC26)/2/v.Ventas*365,
+  des:{DC:"DC = [(CxC25 + CxC26)/2] / Ventas × 365",Ventas:"Ventas = [(CxC25 + CxC26)/2] × 365 / DC",CxC25:"CxC25 = 2 × DC × Ventas / 365 − CxC26",CxC26:"CxC26 = 2 × DC × Ventas / 365 − CxC25"}},
+ {id:"eve",cat:"D",t:3,name:"EV / EBITDA desde el precio",eq:"EV/EBITDA = (Precio × Acc + Deuda − Ef) / EBITDA",
+  vars:[{k:"Precio",u:"$",g:()=>R(10,120,2)},{k:"Acc",u:"mill",g:()=>R(100,800)},{k:"Deuda",u:"$",g:()=>R(1000,12000)},{k:"Ef",u:"$",g:v=>R(100,v.Deuda*.5)},{k:"EBITDA",u:"$",g:v=>R((v.Precio*v.Acc+v.Deuda)/16,(v.Precio*v.Acc+v.Deuda)/4)}],out:{k:"EVE",u:"x"},calc:v=>(v.Precio*v.Acc+v.Deuda-v.Ef)/v.EBITDA,
+  des:{EVE:"EV/EBITDA = (P × Acc + Deuda − Ef) / EBITDA",Precio:"P = (EV/EBITDA × EBITDA − Deuda + Ef) / Acc",Acc:"Acc = (EV/EBITDA × EBITDA − Deuda + Ef) / P",Deuda:"Deuda = EV/EBITDA × EBITDA − P × Acc + Ef",Ef:"Ef = P × Acc + Deuda − EV/EBITDA × EBITDA",EBITDA:"EBITDA = (P × Acc + Deuda − Ef) / (EV/EBITDA)"}},
+ {id:"pu2",cat:"D",t:3,name:"P/U desde la utilidad neta",eq:"P/U = Precio / (UN / Acc)",
+  vars:[{k:"UN",u:"$",g:()=>R(300,4000)},{k:"Acc",u:"mill",g:()=>R(100,800)},{k:"Precio",u:"$",g:v=>R(v.UN/v.Acc*6,v.UN/v.Acc*28,2)}],out:{k:"PU",u:"x"},calc:v=>v.Precio/(v.UN/v.Acc),
+  des:{PU:"P/U = Precio × Acc / UN",Precio:"Precio = P/U × UN / Acc",UN:"UN = Precio × Acc / (P/U)",Acc:"Acc = P/U × UN / Precio"}},
+ {id:"pa2",cat:"B",t:3,name:"Prueba ácida desde la razón circulante",eq:"PA = RC − Inv / PC",
+  vars:[{k:"RC",u:"x",g:()=>R(.8,2.8,2)},{k:"PC",u:"$",g:()=>R(800,8000)},{k:"Inv",u:"$",g:v=>R(v.PC*.1,v.PC*v.RC*.55)}],out:{k:"PA",u:"x"},calc:v=>v.RC-v.Inv/v.PC,
+  des:{PA:"PA = RC − Inv / PC",RC:"RC = PA + Inv / PC",Inv:"Inv = (RC − PA) × PC",PC:"PC = Inv / (RC − PA)"}}
+];
+const LBL={MN:"Margen neto",UN:"Utilidad neta",Ventas:"Ventas",MB:"Margen bruto",CV:"Costo de ventas",ME:"Margen EBITDA",EBITDA:"EBITDA",ROA:"ROA",ATprom:"Activo total prom.",ROE:"ROE",CCprom:"Capital contable prom.",RC:"Razón circulante",AC:"Activo circulante",PC:"Pasivo circulante",PA:"Prueba ácida",Inv:"Inventarios",Cob:"Cobertura de intereses",EBIT:"EBIT",Int:"Gastos por intereses",FCF:"Flujo libre",FO:"Flujo operativo",Capex:"Inversión en activos fijos",PTAT:"Pasivo total / Activo total",PT:"Pasivo total",AT:"Activo total",UPA:"UPA",Acc:"Acciones (millones)",PU:"P/U",Precio:"Precio por acción",Cap:"Capitalización",g:"Crecimiento",X25:"Valor 2025",X26:"Valor 2026",Prom:"Promedio",S25:"Saldo 2025",S26:"Saldo 2026",Rot:"Rotación de activos",Mult:"Multiplicador del capital",DC:"Días de cobro",CxCprom:"CxC promedio",DI:"Días de inventario",Invprom:"Inventario promedio",DP:"Días de pago",CxPprom:"Proveedores promedio",DNE:"Deuda neta / EBITDA",Deuda:"Deuda financiera",Ef:"Efectivo",EV:"Valor empresa",CCE:"Ciclo de conversión",CC25:"Capital contable 2025",CC26:"Capital contable 2026",CxC25:"CxC 2025",CxC26:"CxC 2026",EVE:"EV / EBITDA"};
+const UN={"%":"%","x":"veces","d":"días","$":"$","mill":"mill."};
+const fv=(x,u)=>u==="$"?"$"+fmt(x,2):u==="mill"?fmt(x,0)+" mill.":fmt(x,2)+" "+(u==="%"?"%":u==="x"?"x":"días");
+const G={};let gT=null;
+function bestGet(){try{return +localStorage.getItem("pfaBest")||0}catch(e){return 0}}
+function bestSet(v){try{localStorage.setItem("pfaBest",v)}catch(e){}}
+document.getElementById("gBest").textContent=bestGet();
+function pool(){
+  const m=document.getElementById("gMode").value;
+  if(m==="prog"){const mt=G.lvl<=2?1:G.lvl<=4?2:3;return F.filter(f=>f.t<=mt)}
+  if(m==="all")return F.filter(f=>f.t>=2);
+  return F.filter(f=>f.cat===m);
+}
+function newQ(){
+  const p=pool();let f;do{f=p[Math.floor(Math.random()*p.length)]}while(p.length>1&&G.q&&f.id===G.q.f.id);
+  const v={};f.vars.forEach(x=>v[x.k]=x.g(v));const out=f.calc(v);
+  const all=[...f.vars.map(x=>({k:x.k,u:x.u,val:v[x.k]})),{k:f.out.k,u:f.out.u,val:+out.toFixed(2)}];
+  const hid=all[Math.floor(Math.random()*all.length)];
+  G.q={f,all,hid,done:false};
+  const base=f.t===1?50:f.t===2?70:100;
+  G.max=Math.max(18,Math.round(base*+document.getElementById("gDiff").value-(G.lvl-1)*2));G.left=G.max;
+  const c=document.getElementById("gCard");
+  c.innerHTML=`<div class="tier">Nivel de fórmula ${f.t} · ${M[f.cat].title.slice(3)}</div>
+   <h2>${f.name}</h2><div class="formula">${f.eq}</div>
+   <p class="qtext">Encuentra <b>${LBL[hid.k]||hid.k}</b> (${UN[hid.u]}). Datos:</p>
+   <div class="chips">${all.map(a=>a===hid?`<span class="chip unk">${a.k} = ?</span>`:`<span class="chip">${a.k} = ${fv(a.val,a.u)}</span>`).join("")}</div>
+   <div class="tbar"><i id="tb" style="width:100%"></i></div>
+   <form class="ansrow" id="gForm"><input id="gAns" inputmode="decimal" autocomplete="off" aria-label="Tu respuesta" placeholder="Tu respuesta"><button class="b">Responder</button><button type="button" class="b ghost" id="gSkip">Pasar (−1 vida)</button></form>
+   <div id="gFb"></div>`;
+  document.getElementById("gAns").focus();
+  document.getElementById("gForm").onsubmit=e=>{e.preventDefault();answer(parseN(document.getElementById("gAns").value))};
+  document.getElementById("gSkip").onclick=()=>answer(NaN);
+  clearInterval(gT);gT=setInterval(tick,100);hud();
+}
+function tick(){G.left-=.1;if(G.left<=0){G.left=0;answer(NaN,true)}const tb=document.getElementById("tb");if(tb){tb.style.width=(G.left/G.max*100)+"%";tb.classList.toggle("low",G.left/G.max<.25)}document.getElementById("hTime").textContent=Math.ceil(G.left)}
+function answer(v,timeout){
+  const q=G.q;if(q.done)return;q.done=true;clearInterval(gT);
+  const real=q.hid.val;const ok=isFinite(v)&&Math.abs(v-real)<=Math.max(Math.abs(real)*.015,.05);
+  let msg;
+  if(ok){G.stk++;const pts=Math.round((100+G.left*10)*Math.min(G.stk,5));G.pts+=pts;G.ok++;
+    const up=G.ok%5===0;if(up)G.lvl++;
+    msg=`<div class="fb ok"><b>Correcto. +${pts} puntos${up?" · ¡Subiste al nivel "+G.lvl+"!":""}</b>`;}
+  else{G.stk=0;G.lives--;msg=`<div class="fb bad"><b>${timeout?"Se acabó el tiempo.":isFinite(v)?"Incorrecto.":"Pasaste."}</b> Pierdes una vida.`}
+  msg+=`<p style="margin:6px 0 0">Despeje: <code>${q.f.des[q.hid.k]}</code><br>Resultado: <code>${q.hid.k} = ${fv(real,q.hid.u)}</code></p></div>
+   <div class="btns">${G.lives>0?`<button class="b" id="gNext">Siguiente reto</button>`:`<button class="b" id="gRe">Jugar de nuevo</button>`}</div>`;
+  if(G.lives<=0){const b=bestGet();if(G.pts>b){bestSet(G.pts);document.getElementById("gBest").textContent=G.pts}
+    msg+=`<div class="fb bad"><b>Fin de la partida.</b> Puntos: ${G.pts} · Aciertos: ${G.ok} · Nivel alcanzado: ${G.lvl}${G.pts>b?" · ¡Nuevo récord!":""}</div>`}
+  document.getElementById("gFb").innerHTML=msg;document.getElementById("gAns").disabled=true;
+  const n=document.getElementById("gNext");if(n){n.onclick=newQ;n.focus()}
+  const r=document.getElementById("gRe");if(r)r.onclick=start;
+  hud();
+}
+function hud(){document.getElementById("hPts").textContent=G.pts;document.getElementById("hLvl").textContent=G.lvl;document.getElementById("hStk").textContent="x"+Math.max(1,Math.min(G.stk,5));document.getElementById("hLives").textContent="♥".repeat(Math.max(G.lives,0))+"♡".repeat(3-Math.max(G.lives,0));document.getElementById("hTime").textContent=Math.ceil(G.left||0)}
+function start(){Object.assign(G,{pts:0,lvl:1,stk:0,lives:3,ok:0,q:null});document.getElementById("gHud").hidden=false;document.getElementById("gCard").hidden=false;newQ()}
+document.getElementById("gGo").onclick=start;
+
+/* ===== Versión opción múltiple (reemplaza newQ y answer) ===== */
+const shuf=a=>{a=a.slice();for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]]}return a};
+const pick=a=>a[Math.floor(Math.random()*a.length)];
+// Genera versiones incorrectas de una expresión "LHS = RHS"
+function mutants(s){
+  const i=s.indexOf(" = ");const L=s.slice(0,i),Rh=s.slice(i+3);const out=new Set();
+  const rep=(re,fn)=>{let m;const r=new RegExp(re,"g");while((m=r.exec(Rh))){out.add(L+" = "+Rh.slice(0,m.index)+fn(m)+Rh.slice(m.index+m[0].length))}};
+  rep(" / ",()=>" × ");rep(" × ",()=>" / ");rep(" − ",()=>" + ");rep(" \\+ ",()=>" − ");
+  rep("([A-Za-z0-9/]+) / ([A-Za-z0-9/]+)",m=>m[2]+" / "+m[1]);
+  rep("([A-Za-z0-9/]+) − ([A-Za-z0-9/]+)",m=>m[2]+" − "+m[1]);
+  rep("\\(1 [−+] ",m=>"(");rep(" × 365",()=>" / 365");rep(" × 100",()=>"");
+  out.delete(s);return [...out];
+}
+const CQ=[
+ {c:"A",t:1,q:"Una empresa tiene ROE mucho mayor que su ROA. ¿Qué indica principalmente?",o:["Usa bastante deuda: el multiplicador del capital es alto","Tiene márgenes netos muy altos","Rota sus activos muy rápido","Tiene mucho efectivo en caja"],e:"ROE = ROA × (Activo/Capital). La brecha entre ambos es el multiplicador del capital, es decir, el apalancamiento."},
+ {c:"A",t:2,q:"Dos empresas tienen el mismo margen neto y la misma rotación, pero A tiene ROE mayor. ¿Por qué?",o:["A tiene mayor multiplicador del capital (más deuda)","A vende más caro","A tiene menos inventario","A paga menos impuestos"],e:"Si margen y rotación son iguales, en DuPont solo queda el multiplicador: A financia más activo con pasivo."},
+ {c:"A",t:2,q:"Un supermercado suele tener margen neto bajo y ROE aceptable. ¿Qué palanca de DuPont lo explica?",o:["Alta rotación de activos","Alto margen bruto","Bajo multiplicador","Alta cobertura de intereses"],e:"El retail compensa márgenes delgados vendiendo muchas veces su activo en el año (rotación alta)."},
+ {c:"A",t:1,q:"¿Por qué la guía pide ROA y ROE con saldos PROMEDIO?",o:["La utilidad se genera durante todo el año, así que se compara con los recursos promedio del periodo","Porque el saldo de cierre siempre es incorrecto","Para que el resultado sea más alto","Lo exige la CNBV en todos los casos"],e:"La utilidad es un flujo del año; el activo y el capital son saldos. Promediar inicio y cierre empareja ambos conceptos."},
+ {c:"A",t:2,q:"Las ventas crecen 12 % y la utilidad neta crece 3 %. ¿Qué pasó con el margen neto?",o:["Bajó","Subió","No cambió","No se puede saber si bajó o subió"],e:"Si la utilidad crece menos que las ventas, UN/Ventas disminuye."},
+ {c:"A",t:2,q:"¿Qué diferencia principal hay entre margen EBITDA y margen operativo (EBIT)?",o:["La depreciación y amortización","Los intereses","Los impuestos","El costo de ventas"],e:"EBIT = EBITDA − depreciación y amortización. Una brecha grande indica una empresa intensiva en activos fijos."},
+ {c:"A",t:3,q:"Una empresa aumenta su ROE recomprando acciones con deuda, sin cambiar su utilidad operativa. ¿Cómo lo describirías?",o:["El ROE sube por apalancamiento, no por mejor operación, y el riesgo financiero aumenta","Mejoró su eficiencia operativa","Mejoró su margen bruto","Su ROA también sube en la misma proporción"],e:"Menos capital y más pasivo elevan el multiplicador; el negocio no es más rentable, solo más apalancado."},
+ {c:"B",t:1,q:"La prueba ácida excluye los inventarios porque…",o:["Son el activo circulante menos líquido: hay que venderlos y luego cobrarlos","No aparecen en el balance","Siempre están sobrevaluados por ley","Se registran como pasivo"],e:"La prueba ácida mide la capacidad de pagar el pasivo circulante sin depender de vender inventario."},
+ {c:"B",t:1,q:"Una cobertura de intereses de 0.8x significa que…",o:["El EBIT no alcanza para pagar los intereses del periodo","La empresa no tiene deuda","Los intereses son 80 % de las ventas","La deuda neta es 0.8 veces el EBITDA"],e:"Cobertura = EBIT / Intereses. Menor a 1 indica que la operación no genera lo suficiente para cubrir el costo financiero."},
+ {c:"B",t:2,q:"Deuda neta / EBITDA negativa indica que…",o:["La empresa tiene más efectivo que deuda financiera (caja neta)","La empresa tiene pérdidas","El EBITDA es negativo siempre","Hay un error de cálculo"],e:"Deuda neta = Deuda − Efectivo. Si el efectivo supera la deuda, el numerador es negativo."},
+ {c:"B",t:2,q:"Una empresa reporta utilidad neta alta pero flujo libre negativo. ¿Cuál es la explicación más probable?",o:["La utilidad quedó atrapada en cuentas por cobrar, inventarios o en una inversión fuerte en activos fijos","Paga demasiados dividendos","Su margen bruto bajó","Su P/U es alto"],e:"La utilidad contable no es efectivo; el capital de trabajo y el capex consumen caja."},
+ {c:"B",t:2,q:"Un retail con razón circulante de 0.9x no necesariamente está en problemas porque…",o:["Cobra de contado y sus proveedores le financian el inventario (días de pago altos)","Su prueba ácida siempre es mayor","No tiene deuda","Su margen neto es alto"],e:"Con un ciclo de efectivo corto o negativo, opera con pasivo circulante de proveedores sin riesgo de liquidez inmediato."},
+ {c:"B",t:3,q:"Si la empresa toma deuda y guarda todo el dinero en caja, ¿qué pasa con Deuda neta / EBITDA?",o:["No cambia","Sube","Baja","Se vuelve negativa"],e:"La deuda y el efectivo suben en el mismo monto, así que Deuda − Efectivo queda igual."},
+ {c:"B",t:3,q:"Si la empresa toma deuda y guarda todo el dinero en caja, ¿qué pasa con Pasivo total / Activo total (si era menor a 100 %)?",o:["Sube","Baja","No cambia","Se vuelve 100 %"],e:"Numerador y denominador suben lo mismo; como la razón era menor a 1, se acerca a 1, es decir, sube."},
+ {c:"C",t:1,q:"¿Por qué los días de inventario se calculan sobre costo de ventas y no sobre ventas?",o:["El inventario está registrado a costo, así que se compara con una cifra a costo","Porque el costo siempre es mayor","Por convención fiscal","Para que el resultado sea menor"],e:"Comparar inventario (a costo) con ventas (a precio) mezclaría bases y subestimaría los días."},
+ {c:"C",t:2,q:"Un ciclo de conversión de efectivo negativo significa que…",o:["La empresa cobra a sus clientes antes de pagar a sus proveedores","La empresa pierde dinero","Tiene inventario negativo","No tiene ventas a crédito ni inventario"],e:"CCE = DC + DI − DP < 0: los proveedores financian la operación."},
+ {c:"C",t:2,q:"Si los días de cobro suben de 40 a 60 con ventas iguales, ¿qué ocurre con el efectivo?",o:["Se amarra más efectivo en cuentas por cobrar","Se libera efectivo","No cambia","Sube el margen bruto"],e:"Cobrar más tarde aumenta las CxC promedio y retrasa la entrada de caja."},
+ {c:"C",t:3,q:"¿Cuál acción REDUCE el ciclo de conversión de efectivo?",o:["Negociar más días de pago con proveedores","Dar más crédito a clientes","Aumentar el inventario de seguridad","Reducir el precio de venta"],e:"CCE = DC + DI − DP. Aumentar DP lo reduce."},
+ {c:"D",t:1,q:"Un P/U alto en comparación con el sector suele indicar que…",o:["El mercado espera alto crecimiento o la valuación es exigente","La empresa está barata","La empresa tiene pérdidas","La empresa no tiene deuda"],e:"Pagar muchas veces la utilidad actual implica expectativas de crecimiento o sobrevaluación."},
+ {c:"D",t:2,q:"¿Por qué el EV/EBITDA es útil para comparar empresas con distinta deuda?",o:["El EV incluye la deuda neta, así que es neutral a la estructura de capital","Porque excluye las ventas","Porque solo usa el precio","Porque no usa el EBITDA"],e:"EV = Capitalización + Deuda − Efectivo valora toda la empresa; el P/U solo mira al accionista y se distorsiona con la deuda."},
+ {c:"D",t:2,q:"Una empresa con pérdida neta tiene P/U negativo. ¿Cómo se interpreta?",o:["No es interpretable; conviene usar EV/EBITDA u otro múltiplo","Está muy barata","Está muy cara","Paga muchos dividendos"],e:"Con UPA negativa, el P/U pierde sentido económico."},
+ {c:"D",t:3,q:"Si la empresa usa efectivo para pagar deuda, ¿qué pasa con el EV (precio constante)?",o:["No cambia","Sube","Baja","Se duplica"],e:"Deuda y efectivo bajan lo mismo, así que Cap + Deuda − Efectivo no cambia."},
+ {c:"D",t:3,q:"Un P/U muy bajo en una minera durante precios récord de metales puede ser una trampa porque…",o:["Las utilidades están en un pico cíclico y el mercado anticipa que caerán","Las mineras no cotizan en bolsa","El P/U no aplica a mineras","El EBITDA siempre es negativo"],e:"En sectores cíclicos, P/U bajo en la cima del ciclo suele anticipar menores utilidades."}
+];
+function dirQ(f){ // Si sube una variable de entrada, ¿qué pasa con el resultado?
+  const v={};f.vars.forEach(x=>v[x.k]=x.g(v));const k=pick(f.vars).k;const b=f.calc(v);const v2={...v,[k]:v[k]*1.1};const a=f.calc(v2);
+  const ans=Math.abs(a-b)<1e-9?"No cambia":a>b?"Aumenta":"Disminuye";
+  return {q:`En <b>${f.name}</b> (${f.eq}), si <b>${LBL[k]||k}</b> aumenta y todo lo demás se mantiene igual, ¿qué pasa con <b>${LBL[f.out.k]||f.out.k}</b>?`,o:[ans,...["Aumenta","Disminuye","No cambia"].filter(x=>x!==ans)],e:`Revisa dónde está ${k} en la fórmula: ${f.eq}. ${ans==="Aumenta"?"Está en el numerador o suma":ans==="Disminuye"?"Está en el denominador o resta":"Su efecto se compensa"}.`,mono:false};
+}
+function desQ(f){
+  const ks=Object.keys(f.des).filter(k=>k!==f.out.k);const k=pick(ks);const right=f.des[k];
+  let w=shuf(mutants(right));if(w.length<3)w=w.concat(ks.filter(x=>x!==k).map(x=>k+" = "+f.des[x].split(" = ")[1]));
+  return {q:`A partir de <b>${f.eq}</b>, ¿cuál es el despeje correcto de <b>${LBL[k]||k}</b>?`,o:[right,...[...new Set(w)].filter(x=>x!==right).slice(0,3)],e:`Despeje: ${right}`,mono:true};
+}
+function eqQ(f){
+  const right=f.eq.split("   ")[0];let w=shuf(mutants(right));
+  return {q:`¿Cuál es la fórmula correcta de <b>${f.name}</b>?`,o:[right,...w.slice(0,3)],e:`${f.name}: ${f.eq}`,mono:true};
+}
+function nameQ(f,p){
+  const others=shuf([...new Set(F.filter(x=>x.id!==f.id&&x.name!==f.name).map(x=>x.name))]).slice(0,3);
+  return {q:`¿Qué indicador se calcula así? <span class="formula" style="display:block;margin-top:8px">${f.eq.replace(/^[^=]+= /,"? = ")}</span>`,o:[f.name,...others],e:`Es ${f.name}: ${f.eq}`,mono:false};
+}
+function newQ(){
+  const p=pool();const m=document.getElementById("gMode").value;const mt=m==="prog"?(G.lvl<=2?1:G.lvl<=4?2:3):m==="all"?3:3;
+  const cq=CQ.filter(x=>x.t<=mt&&(m==="prog"||m==="all"||x.c===m));
+  let item,f=pick(p);const r=Math.random();
+  if(r<.3&&cq.length){const c=pick(cq);item={q:c.q,o:c.o,e:c.e,mono:false,tag:"Contexto"}}
+  else if(r<.5){item=dirQ(f);item.tag="Sensibilidad"}
+  else if(r<.75){item=desQ(f);item.tag="Despeje"}
+  else if(r<.9){item=eqQ(f);item.tag="Fórmula"}
+  else{item=nameQ(f,p);item.tag="Reconocer"}
+  item.o=item.o.filter((x,i,a)=>a.indexOf(x)===i);
+  const right=item.o[0];item.opts=shuf(item.o);item.right=right;item.done=false;G.q=item;
+  G.max=Math.max(12,Math.round((item.tag==="Contexto"?30:22)*+document.getElementById("gDiff").value-(G.lvl-1)));G.left=G.max;
+  const c=document.getElementById("gCard");
+  c.innerHTML=`<div class="tier">${item.tag}</div><p class="qtext" style="font-size:1.1rem">${item.q}</p>
+   <div class="tbar"><i id="tb" style="width:100%"></i></div>
+   <div class="opts" style="display:grid;gap:8px">${item.opts.map((o,i)=>`<button class="opt" data-i="${i}" style="all:unset;cursor:pointer;border:1px solid var(--line);border-radius:8px;padding:10px 14px;background:var(--bg);${item.mono?"font-family:var(--mono)":""}"><b style="font-family:var(--mono);color:var(--muted);margin-right:8px">${"ABCD"[i]}</b>${o}</button>`).join("")}</div>
+   <div id="gFb"></div>`;
+  c.querySelectorAll(".opt").forEach(b=>b.onclick=()=>answer(+b.dataset.i));
+  clearInterval(gT);gT=setInterval(tick,100);hud();
+}
+function answer(i,timeout){
+  const q=G.q;if(!q||q.done)return;q.done=true;clearInterval(gT);
+  const ok=i!==undefined&&!isNaN(i)&&q.opts[i]===q.right;
+  document.querySelectorAll(".opt").forEach((b,j)=>{b.disabled=true;b.style.cursor="default";if(q.opts[j]===q.right){b.style.borderColor="var(--ok)";b.style.background="var(--ok-soft)"}else if(j===i){b.style.borderColor="var(--bad)";b.style.background="var(--bad-soft)"}});
+  let msg;
+  if(ok){G.stk++;const pts=Math.round((100+G.left*10)*Math.min(G.stk,5));G.pts+=pts;G.ok++;const up=G.ok%5===0;if(up)G.lvl++;
+    msg=`<div class="fb ok"><b>Correcto. +${pts} puntos${up?" · ¡Subiste al nivel "+G.lvl+"!":""}</b>`}
+  else{G.stk=0;G.lives--;msg=`<div class="fb bad"><b>${timeout?"Se acabó el tiempo.":"Incorrecto."}</b> Pierdes una vida.`}
+  msg+=`<p style="margin:6px 0 0">${q.e}</p></div><div class="btns">${G.lives>0?`<button class="b" id="gNext">Siguiente reto</button>`:`<button class="b" id="gRe">Jugar de nuevo</button>`}</div>`;
+  if(G.lives<=0){const b=bestGet();if(G.pts>b){bestSet(G.pts);document.getElementById("gBest").textContent=G.pts}
+    msg+=`<div class="fb bad"><b>Fin de la partida.</b> Puntos: ${G.pts} · Aciertos: ${G.ok} · Nivel alcanzado: ${G.lvl}${G.pts>b?" · ¡Nuevo récord!":""}</div>`}
+  document.getElementById("gFb").innerHTML=msg;
+  const n=document.getElementById("gNext");if(n){n.onclick=newQ;n.focus()}
+  const r=document.getElementById("gRe");if(r)r.onclick=start;hud();
+}
+document.addEventListener("keydown",e=>{if(document.getElementById("viewGame").hidden||!G.q||G.q.done||G.q.kind==="calc"||/INPUT|SELECT|TEXTAREA/.test(document.activeElement.tagName))return;const i="abcd1234".indexOf(e.key.toLowerCase());if(i>=0)answer(i%4)});
+
+/* ===== Render de fórmulas: divisiones como fracciones ===== */
+function fx(s){
+  try{
+    const esc=t=>String(t).replace(/&/g,"&amp;").replace(/</g,"&lt;");
+    let lhs="",rhs=s.trim();const k=rhs.indexOf(" = ");if(k>=0){lhs=rhs.slice(0,k);rhs=rhs.slice(k+3)}
+    const re=/\s*(DN\/EBITDA|EV\/EBITDA|P\/U|PT\/AT|[A-Za-zÁÉÍÓÚáéíóúñ][A-Za-z0-9ÁÉÍÓÚáéíóúñ]*|\d+(?:\.\d+)?|\?|[()\[\]+\-−×*\/÷|])/y;
+    const tk=[];let m;re.lastIndex=0;while(re.lastIndex<rhs.length){m=re.exec(rhs);if(!m)throw 0;tk.push(m[1])}
+    let p=0;const peek=()=>tk[p],next=()=>tk[p++];
+    const name=t=>{const mm=t.match(/^(.*?)(25|26|prom)$/);if(mm&&mm[1])return `<i>${esc(mm[1])}</i><sub>${mm[2]}</sub>`;return /^\d/.test(t)?esc(t):t==="?"?"<b>?</b>":`<i>${esc(t)}</i>`};
+    function prim(){const t=next();if(t==="("||t==="["){const e=expr();next();return {t:"par",e,b:t==="["?"[]":"()"}}if(t==="|"){const e=expr();next();return {t:"abs",e}}if(t==="−"||t==="-"){return {t:"neg",e:prim()}}if(t===undefined)throw 0;return {t:"id",v:t}}
+    function term(){let a=prim();while(["×","*","/","÷"].includes(peek())){const o=next();const b=prim();a=(o==="/"||o==="÷")?{t:"fr",a,b}:{t:"mul",a,b}}return a}
+    function expr(){let a=term();while(["+","−","-"].includes(peek())){const o=next();a={t:"add",o:o==="+"?"+":"−",a,b:term()}}return a}
+    const strip=n=>n.t==="par"&&n.b==="()"?n.e:n;
+    function R(n){switch(n.t){case"id":return name(n.v);case"par":return `${n.b[0]}${R(n.e)}${n.b[1]}`;case"abs":return `|${R(n.e)}|`;case"neg":return `−${R(n.e)}`;
+      case"fr":return `<span class="fr"><span class="nu">${R(strip(n.a))}</span><span class="de">${R(strip(n.b))}</span></span>`;
+      case"mul":return `${R(n.a)}<span class="op">×</span>${R(n.b)}`;case"add":return `${R(n.a)}<span class="op">${n.o}</span>${R(n.b)}`}}
+    const tree=expr();if(p<tk.length)throw 0;
+    return `<span class="fx">${lhs?`<span class="lhs">${esc(lhs)}</span><span class="op">=</span>`:""}${R(tree)}</span>`;
+  }catch(e){return `<span class="fx">${String(s).replace(/</g,"&lt;")}</span>`}
+}
+
+/* ===== Evaluador estilo Excel ===== */
+function evalExpr(src,vars){
+  let s=String(src).trim().replace(/^=/,"");if(!s)return NaN;
+  s=s.replace(/(\d),(\d{3})/g,"$1$2").replace(/×/g,"*").replace(/÷/g,"/").replace(/−/g,"-").replace(/\^/g,"**").replace(/(\d+(?:\.\d+)?)%/g,"($1/100)");
+  const names=Object.keys(vars).sort((a,b)=>b.length-a.length);
+  s=s.replace(/[A-Za-z][A-Za-z0-9]*/g,w=>{const n=names.find(x=>x.toLowerCase()===w.toLowerCase());if(n===undefined)throw new Error("No reconozco "+w);return "("+vars[n]+")"});
+  if(!/^[\d\s.+\-*/()]*$/.test(s))throw new Error("Carácter no válido");
+  const v=Function("return ("+s+")")();if(typeof v!=="number"||!isFinite(v))throw new Error("Resultado no válido");return v;
+}
+
+/* ===== Tipos de reto (versión ordenada) ===== */
+const TYPES={name:"Identificar el indicador",eq:"Fórmula correcta",des:"Despeje",dir:"Sensibilidad",ctx:"Interpretación",calc:"Cálculo"};
+function nameQ(f){const others=shuf([...new Set(F.filter(x=>x.name!==f.name).map(x=>x.name))]).slice(0,3);
+  return {q:`Identifique el indicador financiero que corresponde a la siguiente expresión:`,show:f.eq.split("   ")[0].replace(/^[^=]+= /,"? = "),o:[f.name,...others],e:`Corresponde a <b>${f.name}</b>.`,ef:f.eq.split("   ")[0],mono:false}}
+function eqQ(f){const right=f.eq.split("   ")[0];const w=shuf(mutants(right));
+  return {q:`Seleccione la expresión que define correctamente <b>${f.name}</b>:`,o:[right,...w.slice(0,3)],e:`Definición de ${f.name}:`,ef:right,mono:true}}
+function desQ(f){const ks=Object.keys(f.des).filter(k=>k!==f.out.k);const k=pick(ks);const right=f.des[k];
+  let w=shuf(mutants(right));if(w.length<3)w=w.concat(ks.filter(x=>x!==k).map(x=>k+" = "+f.des[x].split(" = ")[1]));
+  return {q:`Dada la relación siguiente, seleccione la expresión que despeja correctamente <b>${LBL[k]||k}</b>:`,show:f.eq.split("   ")[0],o:[right,...[...new Set(w)].filter(x=>x!==right).slice(0,3)],e:"Despeje correcto:",ef:right,mono:true}}
+function dirQ(f){const v={};f.vars.forEach(x=>v[x.k]=x.g(v));const k=pick(f.vars).k;const b=f.calc(v);const a=f.calc({...v,[k]:v[k]*1.1});
+  const ans=Math.abs(a-b)<1e-9?"Permanece sin cambio":a>b?"Aumenta":"Disminuye";
+  return {q:`Considerando la expresión de <b>${f.name}</b>, si <b>${LBL[k]||k}</b> se incrementa y el resto de las variables permanece constante (ceteris paribus), ¿qué ocurre con <b>${LBL[f.out.k]||f.out.k}</b>?`,show:f.eq.split("   ")[0],o:[ans,...["Aumenta","Disminuye","Permanece sin cambio"].filter(x=>x!==ans)],
+   e:`${k} ${ans==="Aumenta"?"se encuentra en el numerador o suma al resultado":ans==="Disminuye"?"se encuentra en el denominador o resta al resultado":"tiene efectos que se compensan"}; por lo tanto, ${LBL[f.out.k]||f.out.k} ${ans.toLowerCase()}.`,mono:false}}
+function ctxQ(cq){const c=pick(cq);return {q:c.q,o:c.o,e:c.e,mono:false}}
+function calcQ(f){
+  const v={};f.vars.forEach(x=>v[x.k]=x.g(v));const out=f.calc(v);
+  const all=[...f.vars.map(x=>({k:x.k,u:x.u,val:v[x.k]})),{k:f.out.k,u:f.out.u,val:+out.toFixed(2)}];
+  const hid=f.t>=2?pick(all):all[all.length-1];
+  return {kind:"calc",f,all,hid,q:`La emisora presenta la información siguiente (cifras en millones de pesos, salvo indicación). Determine <b>${LBL[hid.k]||hid.k}</b> expresado en ${UN[hid.u]}.`,show:f.eq.split("   ")[0],e:"Despeje utilizado:",ef:f.des[hid.k]};
+}
+function newQ(){
+  const p=pool();const m=document.getElementById("gMode").value;const mt=m==="prog"?(G.lvl<=2?1:G.lvl<=4?2:3):3;
+  const cq=CQ.filter(x=>x.t<=mt&&(m==="prog"||m==="all"||x.c===m));
+  let type=document.getElementById("gType").value;
+  if(type==="mix")type=pick(["name","eq","des","des","dir","ctx","ctx","calc"]);
+  if(type==="ctx"&&!cq.length)type="dir";
+  let f=pick(p);if(G.q&&G.q.f&&p.length>1)while(f===G.q.f)f=pick(p);
+  const item=type==="name"?nameQ(f):type==="eq"?eqQ(f):type==="des"?desQ(f):type==="dir"?dirQ(f):type==="ctx"?ctxQ(cq):calcQ(f);
+  item.f=f;item.tag=TYPES[type];item.kind=item.kind||"mc";item.done=false;G.q=item;
+  const c=document.getElementById("gCard");
+  const base=type==="calc"?120:type==="ctx"?35:25;
+  G.max=Math.max(type==="calc"?45:12,Math.round(base*+document.getElementById("gDiff").value-(G.lvl-1)*(type==="calc"?3:1)));G.left=G.max;
+  let h=`<div class="tier">${item.tag} · ${M[f.cat].title.slice(3)}</div><p class="qtext" style="font-size:1.08rem">${item.q}</p>`;
+  if(item.show)h+=`<div class="formula">${fx(item.show)}</div>`;
+  h+=`<div class="tbar"><i id="tb" style="width:100%"></i></div>`;
+  if(item.kind==="mc"){
+    item.o=item.o.filter((x,i,a)=>a.indexOf(x)===i);item.right=item.o[0];item.opts=shuf(item.o);
+    h+=`<div style="display:grid;gap:8px">${item.opts.map((o,i)=>`<button class="opt ${item.mono?"optfx":""}" data-i="${i}" style="all:unset;cursor:pointer;border:1px solid var(--line);border-radius:8px;padding:10px 14px;background:var(--bg);display:flex;align-items:center;gap:10px"><b style="font-family:var(--mono);color:var(--muted)">${"ABCD"[i]}</b><span>${item.mono?fx(o):o}</span></button>`).join("")}</div>`;
+  }else{
+    const vars={};item.all.forEach(a=>{if(a!==item.hid)vars[a.k]=a.val});item.vars=vars;
+    h+=`<p class="note">Datos (haz clic en uno para insertarlo en la celda activa):</p><div class="chips">${item.all.map(a=>a===item.hid?`<span class="chip unk">${a.k} = ?</span>`:`<span class="chip var" data-n="${a.k}">${a.k} = ${fv(a.val,a.u)}</span>`).join("")}</div>
+    <div class="calcwrap"><div><b>Hoja de trabajo</b><p class="note" style="margin:2px 0 8px">Escribe operaciones como en Excel: <code>=1300/((6900+7500)/2)*100</code>. Puedes usar los nombres de los datos (UN, Ventas…), las celdas anteriores (A1, A2…), paréntesis, ^ y %.</p>
+    <div class="sheet" id="sheet">${[1,2,3,4,5].map(n=>`<span class="cl">A${n}</span><input id="c${n}" data-c="A${n}" autocomplete="off" placeholder="${n===1?"=UN/Ventas*100":""}"><span class="rv" id="r${n}"></span>`).join("")}</div></div>
+    <div><b>Respuesta final</b><p class="note" style="margin:2px 0 8px">Un número, una fórmula o una celda (por ejemplo <code>=A3</code>). Para % escribe el número: 12.5 = 12.5 %.</p>
+    <form class="ansrow" id="gForm"><input id="gAns" autocomplete="off" aria-label="Respuesta final" placeholder="=A3"><button class="b">Responder</button></form><div class="ansprev" id="ansPrev"></div></div></div>`;
+  }
+  h+=`<div id="gFb"></div>`;c.innerHTML=h;
+  if(item.kind==="mc")c.querySelectorAll(".opt").forEach(b=>b.onclick=()=>answer(+b.dataset.i));
+  else{
+    let active=document.getElementById("c1");
+    const cells=()=>{const vals={...item.vars};for(let n=1;n<=5;n++){const el=document.getElementById("c"+n),r=document.getElementById("r"+n);if(!el.value.trim()){r.textContent="";continue}
+      try{const x=evalExpr(el.value,vals);vals["A"+n]=x;r.textContent=fmt(x,4);r.className="rv"}catch(e){r.textContent=e.message;r.className="rv err"}}return vals};
+    item.cells=cells;
+    c.querySelectorAll(".sheet input,#gAns").forEach(el=>{el.addEventListener("focus",()=>active=el);el.addEventListener("input",()=>{const vals=cells();const a=document.getElementById("gAns").value;try{document.getElementById("ansPrev").textContent=a?"= "+fmt(evalExpr(a,vals),4):""}catch(e){document.getElementById("ansPrev").textContent=e.message}})});
+    c.querySelectorAll(".chip.var").forEach(ch=>ch.onclick=()=>{const el=active;if(!el.value)el.value="=";el.value+=ch.dataset.n;el.focus();el.dispatchEvent(new Event("input"))});
+    document.getElementById("gForm").onsubmit=e=>{e.preventDefault();let v=NaN;try{v=evalExpr(document.getElementById("gAns").value,cells())}catch(er){}answer(v)};
+    document.getElementById("c1").focus();
+  }
+  clearInterval(gT);gT=setInterval(tick,100);hud();
+}
+function answer(i,timeout){
+  const q=G.q;if(!q||q.done)return;q.done=true;clearInterval(gT);let ok;
+  if(q.kind==="mc"){ok=!timeout&&q.opts[i]===q.right;
+    document.querySelectorAll(".opt").forEach((b,j)=>{b.disabled=true;b.style.cursor="default";if(q.opts[j]===q.right){b.style.borderColor="var(--ok)";b.style.background="var(--ok-soft)"}else if(j===i){b.style.borderColor="var(--bad)";b.style.background="var(--bad-soft)"}});}
+  else{const real=q.hid.val;ok=!timeout&&isFinite(i)&&Math.abs(i-real)<=Math.max(Math.abs(real)*.01,.05);
+    document.querySelectorAll("#gCard input").forEach(x=>x.disabled=true);}
+  let msg;
+  if(ok){G.stk++;const pts=Math.round((100+G.left*(q.kind==="calc"?5:10))*Math.min(G.stk,5));G.pts+=pts;G.ok++;const up=G.ok%5===0;if(up)G.lvl++;
+    msg=`<div class="fb ok"><b>Correcto. +${pts} puntos${up?" · Nivel "+G.lvl+" desbloqueado":""}</b>`}
+  else{G.stk=0;G.lives--;msg=`<div class="fb bad"><b>${timeout?"Tiempo agotado.":"Incorrecto."}</b> Pierdes una vida.`}
+  msg+=`<p style="margin:6px 0 0">${q.e||""}</p>${q.ef?`<div style="margin-top:6px">${fx(q.ef)}</div>`:""}${q.kind==="calc"?`<p style="margin:6px 0 0">Resultado: <b>${q.hid.k} = ${fv(q.hid.val,q.hid.u)}</b>${isFinite(i)&&!timeout?` · Tu respuesta: ${fmt(i,4)}`:""}</p>`:""}</div>
+   <div class="btns">${G.lives>0?`<button class="b" id="gNext">Siguiente reto</button>`:`<button class="b" id="gRe">Jugar de nuevo</button>`}</div>`;
+  if(G.lives<=0){const b=bestGet();if(G.pts>b){bestSet(G.pts);document.getElementById("gBest").textContent=G.pts}
+    msg+=`<div class="fb bad"><b>Fin de la partida.</b> Puntos: ${G.pts} · Aciertos: ${G.ok} · Nivel alcanzado: ${G.lvl}${G.pts>b?" · Nuevo récord":""}</div>`}
+  document.getElementById("gFb").innerHTML=msg;
+  const n=document.getElementById("gNext");if(n){n.onclick=newQ;n.focus()}
+  const r=document.getElementById("gRe");if(r)r.onclick=start;hud();
+}
+document.getElementById("cheat").innerHTML=`<table class="cheat"><thead><tr><th>Indicador</th><th>Definición</th><th>Despejes</th></tr></thead><tbody>${F.map(f=>`<tr><td><b>${f.name}</b></td><td>${fx(f.eq.split("   ")[0])}</td><td>${Object.entries(f.des).filter(([k])=>k!==f.out.k).map(([,d])=>`<div>${fx(d)}</div>`).join("")}</td></tr>`).join("")}</tbody></table>`;
+document.getElementById("cheatBtn").onclick=e=>{const c=document.getElementById("cheat");c.hidden=!c.hidden;e.target.textContent=c.hidden?"Mostrar":"Ocultar"};
+document.getElementById("cheat").innerHTML=`<table class="cheat"><thead><tr><th>Fórmula</th><th>Todos los despejes</th></tr></thead><tbody>${F.map(f=>`<tr><td><b>${f.name}</b><br>${f.eq}</td><td>${Object.values(f.des).join("<br>")}</td></tr>`).join("")}</tbody></table>`;
+/* ===== Banco teórico ===== */
+const TT=["Todos los temas","1 · Sistema financiero y regulación","2 · BMV vs BIVA e infraestructura","3 · Oferta pública y S.A.B.","4 · Mercados globales, listados y deslistes","5 · Inflación y conceptos financieros","6 · Razones financieras, DuPont y múltiplos","7 · Flujos de efectivo y valuación DCF"];
+const TQ=[
+ [1,"¿Qué autoridad encabeza la rectoría del sistema financiero mexicano, diseña la política hacendaria y coordina a las comisiones supervisoras?",["Secretaría de Hacienda y Crédito Público (SHCP)","Banco de México","CNBV","CONDUSEF"],"La SHCP es la cabeza del sistema financiero: planea la política financiera y hacendaria; las comisiones (CNBV, CNSF, CONSAR) son órganos desconcentrados de la SHCP."],
+ [1,"¿Cuál es el objetivo prioritario que la Constitución asigna al Banco de México?",["Procurar la estabilidad del poder adquisitivo de la moneda nacional","Maximizar el crecimiento del PIB","Financiar el gasto del gobierno federal","Supervisar a las casas de bolsa"],"Art. 28 constitucional: Banxico es autónomo y su objetivo prioritario es la estabilidad de precios (control de la inflación)."],
+ [1,"¿Qué significa que Banxico sea autónomo?",["Ninguna autoridad puede ordenarle conceder financiamiento, y decide su política monetaria con independencia","Que no rinde cuentas a nadie","Que depende de la SHCP para fijar la tasa de interés","Que es una empresa privada"],"La autonomía (vigente desde 1994) impide que se le obligue a financiar al gobierno, lo que protege la estabilidad de precios."],
+ [1,"¿Qué instrumento principal utiliza Banxico para conducir su política monetaria?",["La tasa de interés objetivo (tasa de fondeo interbancario a un día)","El encaje legal al 100 %","El tipo de cambio fijo","El presupuesto de egresos"],"Banxico ajusta la tasa objetivo para influir en las condiciones financieras y en la inflación."],
+ [1,"¿Qué comisión supervisa a bancos, casas de bolsa, emisoras y entidades fintech?",["CNBV","CNSF","CONSAR","IPAB"],"La Comisión Nacional Bancaria y de Valores supervisa los sectores bancario, bursátil y las Instituciones de Tecnología Financiera."],
+ [1,"Las aseguradoras y afianzadoras son supervisadas por…",["CNSF","CNBV","CONSAR","CONDUSEF"],"La Comisión Nacional de Seguros y Fianzas regula y supervisa a los sectores asegurador y afianzador."],
+ [1,"¿Qué organismo regula el Sistema de Ahorro para el Retiro (AFORES y SIEFORES)?",["CONSAR","CNBV","IPAB","Banxico"],"La Comisión Nacional del Sistema de Ahorro para el Retiro supervisa a las AFORES (administradoras) y SIEFORES (sociedades de inversión)."],
+ [1,"¿Hasta qué monto protege el IPAB los depósitos bancarios?",["Hasta 400 mil UDIs por persona, por banco","Hasta 400 mil pesos por cuenta","Sin límite","Hasta 4 millones de UDIs por persona en todo el sistema"],"El seguro de depósito cubre hasta 400,000 UDIs por persona física o moral y por institución."],
+ [1,"Además del seguro de depósito, ¿qué otra función tiene el IPAB?",["Resolver bancos con problemas de solvencia de manera ordenada","Fijar la tasa de interés","Autorizar la emisión de acciones","Supervisar a las aseguradoras"],"El IPAB administra la resolución bancaria para proteger a los ahorradores y la estabilidad del sistema."],
+ [1,"¿Cuál es la función de la CONDUSEF?",["Proteger y defender a los usuarios de servicios financieros","Supervisar la solvencia de los bancos","Emitir billetes","Autorizar las ofertas públicas"],"La CONDUSEF atiende quejas, orienta y concilia; además opera el Buró de Entidades Financieras."],
+ [1,"¿Qué es el Buró de Entidades Financieras?",["Herramienta de la CONDUSEF que muestra el desempeño de las instituciones: quejas, sanciones y prácticas","El historial crediticio de las personas","Un registro de casas de bolsa de la BMV","El padrón de emisoras de la CNBV"],"No es el Buró de Crédito: evalúa a las instituciones, no a los usuarios."],
+ [1,"Los Acuerdos de Basilea son emitidos por…",["El Comité de Supervisión Bancaria de Basilea","El FMI","La CNBV","La Reserva Federal"],"El Comité, alojado en el Banco de Pagos Internacionales (BIS), emite estándares que cada país adopta en su regulación."],
+ [1,"¿Cuál era el foco principal de Basilea I (1988)?",["Un requerimiento mínimo de capital de 8 % sobre activos ponderados por riesgo de crédito","La liquidez de corto plazo","El riesgo operativo exclusivamente","El gobierno corporativo"],"Basilea I estableció el índice de capital mínimo de 8 % considerando principalmente el riesgo de crédito."],
+ [1,"Basilea II se organiza en tres pilares. ¿Cuáles son?",["Requerimientos mínimos de capital, revisión supervisora y disciplina de mercado","Liquidez, solvencia y rentabilidad","Crédito, mercado y tipo de cambio","Capital, deuda y dividendos"],"Basilea II añadió la supervisión y la transparencia como pilares, e incorporó el riesgo operativo."],
+ [1,"¿Qué introdujo Basilea III tras la crisis de 2008?",["Capital de mayor calidad, colchones de capital y requisitos de liquidez (LCR y NSFR)","La eliminación del capital mínimo","El seguro de depósito","La autonomía de los bancos centrales"],"Basilea III endureció la calidad del capital (capital fundamental) y creó indicadores de liquidez."],
+ [1,"El Coeficiente de Cobertura de Liquidez (LCR) mide…",["Si el banco tiene activos líquidos de alta calidad suficientes para cubrir salidas netas de efectivo en 30 días de estrés","El fondeo estable a un año","La rentabilidad del capital","La morosidad de la cartera"],"LCR = activos líquidos de alta calidad / salidas netas de efectivo a 30 días ≥ 100 %."],
+ [1,"El Coeficiente de Fondeo Estable Neto (NSFR) busca que…",["Los activos de largo plazo se financien con fuentes estables en un horizonte de un año","El banco tenga efectivo para 30 días","El capital sea al menos 8 %","Los depósitos estén asegurados"],"NSFR = fondeo estable disponible / fondeo estable requerido ≥ 100 %; reduce el descalce de plazos."],
+ [1,"En la estructura de capital regulatorio, ¿cuál es el de mayor calidad para absorber pérdidas?",["Capital fundamental (acciones comunes y utilidades retenidas)","Capital complementario","Deuda subordinada","Reservas preventivas"],"El capital fundamental (CET1) absorbe pérdidas de forma inmediata; el complementario es de menor calidad."],
+ [1,"¿Qué diferencia a una SOFOM E.R. de una SOFOM E.N.R.?",["La E.R. tiene vínculos patrimoniales con bancos o emite valores, y queda regulada y supervisada por la CNBV","La E.R. no puede otorgar crédito","La E.N.R. capta depósitos del público","La E.N.R. es supervisada por Banxico"],"Las SOFOM E.N.R. no están supervisadas prudencialmente por la CNBV (solo en prevención de lavado de dinero) y la CONDUSEF las vigila en protección al usuario."],
+ [1,"¿Qué sucedió con las SOFOLES?",["Desaparecieron como figura y migraron a SOFOM","Se convirtieron en bancos múltiples","Hoy captan depósitos del público","Son supervisadas por la CONSAR"],"Las Sociedades Financieras de Objeto Limitado fueron sustituidas por las SOFOM, de objeto múltiple."],
+ [1,"Una característica común de SOFOMES y uniones de crédito es que…",["No captan depósitos del público en general","Están cubiertas por el IPAB","Emiten moneda","Son autoridades financieras"],"Solo las entidades de depósito (bancos) captan del público; por eso las SOFOMES no tienen seguro del IPAB."],
+ [1,"¿Qué servicio presta un almacén general de depósito?",["Guarda y conserva mercancías y emite certificados de depósito y bonos de prenda","Custodia valores bursátiles","Otorga crédito hipotecario","Liquida operaciones de bolsa"],"Los certificados de depósito acreditan la propiedad de la mercancía; el bono de prenda permite usarla como garantía."],
+ [2,"¿Desde cuándo operó la BMV como única bolsa del país, tras integrar las bolsas regionales?",["Desde 1975, hasta la llegada de BIVA en 2018","Desde 1894, sin interrupción hasta hoy","Desde 2000","Desde 1990, hasta 2010"],"En 1975 la Bolsa Mexicana de Valores unificó el mercado; el monopolio terminó cuando BIVA inició operaciones en 2018."],
+ [2,"¿Qué grupo respalda a BIVA (Bolsa Institucional de Valores)?",["CENCOR (Central de Corretajes)","Grupo BMV","Nasdaq como accionista mayoritario","Banxico"],"BIVA pertenece a CENCOR; su tecnología de negociación la provee Nasdaq."],
+ [2,"¿Qué cambio regulatorio permitió el surgimiento de una segunda bolsa?",["La reforma financiera que facilitó la autorización de nuevas bolsas de valores","La autonomía de Banxico","Basilea III","El TLCAN"],"Con la reforma financiera de 2014, la SHCP autorizó la nueva bolsa, que inició operaciones el 25 de julio de 2018."],
+ [2,"¿Cuál es el motor de negociación de la BMV?",["MoNeT","X-stream INET","SIC","Indeval"],"MoNeT (Motor de Negociación Transaccional) es el sistema electrónico de la BMV."],
+ [2,"¿Qué tecnología usa BIVA para su motor de negociación?",["X-stream INET de Nasdaq","MoNeT","Bloomberg","Un sistema de corros a viva voz"],"BIVA adoptó la plataforma de Nasdaq, conocida por su baja latencia y alta capacidad de procesamiento."],
+ [2,"En un motor de negociación, ¿qué significa una baja latencia?",["Que el tiempo entre el envío de una orden y su procesamiento es muy corto","Que hay pocas emisoras listadas","Que los precios cambian poco","Que la comisión es baja"],"La latencia se mide en micro o milisegundos; es clave para el trading algorítmico."],
+ [2,"¿Cuántas emisoras integran el S&P/BMV IPC?",["35","30","50","100"],"La muestra del IPC se integra por 35 emisoras seleccionadas por criterios de liquidez y tamaño."],
+ [2,"¿Qué criterios principales se usan para seleccionar las emisoras del S&P/BMV IPC?",["Liquidez (rotación) y valor de capitalización flotado","Antigüedad de la empresa","Número de empleados","Pago de dividendos"],"Se consideran la bursatilidad y la capitalización ajustada por acciones flotantes, que también determina la ponderación."],
+ [2,"¿Qué tipo de valores quedan excluidos del S&P/BMV IPC pero sí entran en el FTSE BIVA?",["FIBRAs","Acciones de bancos","Empresas industriales","Acciones serie A"],"El IPC excluye las FIBRAs (tienen su propio índice); el FTSE BIVA las incluye junto con empresas de mediana capitalización."],
+ [2,"¿Cuál es una característica del FTSE BIVA frente al IPC?",["Tiene una cobertura más amplia del mercado, incluyendo mediana capitalización y FIBRAs","Solo incluye 10 emisoras","Solo incluye bonos","Se calcula una vez al mes"],"El FTSE BIVA busca representar de forma más integral el mercado accionario mexicano."],
+ [2,"¿Para qué sirve una subasta de volatilidad?",["Detener la negociación continua cuando un precio se mueve más allá de un rango y recalcular un precio de equilibrio","Colocar acciones nuevas","Fijar el tipo de cambio","Liquidar las operaciones del día"],"Las subastas de volatilidad protegen contra movimientos bruscos; también existen subastas de apertura y de cierre."],
+ [2,"¿Qué busca la subasta de cierre?",["Determinar un precio de cierre representativo concentrando órdenes al final de la sesión","Abrir el mercado","Suspender a una emisora","Calcular la UPA"],"Un precio de cierre robusto es importante para la valuación de fondos e índices."],
+ [2,"La Norma de Mejor Ejecución obliga a las casas de bolsa a…",["Buscar las mejores condiciones disponibles para la orden del cliente entre los distintos centros de ejecución","Operar solo en la BMV","Cobrar la comisión mínima","Garantizar ganancias"],"Con dos bolsas, la CNBV exige que el intermediario considere precio, volumen y costo en ambas."],
+ [2,"¿Qué es la fragmentación de la liquidez?",["Que las órdenes de un mismo valor se dividan entre varias bolsas, reduciendo la profundidad en cada una","Que una empresa divida sus acciones (split)","Que el mercado cierre por partes","Que se liquiden operaciones en varios días"],"Es un efecto de la competencia entre bolsas: más opciones, pero libros de órdenes más delgados en cada centro."],
+ [2,"¿Cuál es la función de S.D. Indeval?",["Depósito centralizado: custodia, administración, compensación y liquidación de valores por anotación en cuenta","Negociar acciones","Supervisar a las emisoras","Asegurar depósitos"],"Indeval custodia los valores de forma electrónica (book-entry) y da servicio a ambas bolsas como infraestructura neutral."],
+ [2,"¿Qué significa custodia por 'anotación en cuenta' (book-entry)?",["Los valores no existen físicamente; la titularidad se registra electrónicamente","Las acciones se guardan en bóveda","Cada inversionista recibe un título impreso","La custodia la lleva la emisora"],"La desmaterialización agiliza la transferencia y reduce riesgos de pérdida o falsificación."],
+ [2,"¿Cuál es el papel de la CCV (Contraparte Central de Valores)?",["Se interpone entre comprador y vendedor para asumir el riesgo de contraparte y garantizar la liquidación","Emitir acciones","Fijar los precios","Calcular el IPC"],"La CCV se convierte en comprador de todo vendedor y vendedor de todo comprador, con garantías y fondos de aportación."],
+ [2,"¿Por qué es relevante que Indeval y la CCV atiendan a ambas bolsas?",["Porque la infraestructura de liquidación es compartida y neutral, sin importar dónde se negocie","Porque BIVA no puede negociar acciones","Porque así lo exige Basilea","Porque son autoridades"],"La negociación compite (BMV vs BIVA), pero la post-negociación (custodia y liquidación) es común."],
+ [3,"Según el Art. 2, fracc. XVIII de la LMV, la oferta pública se caracteriza por realizarse…",["En territorio nacional, a través de medios masivos de comunicación y a persona indeterminada","Solo a inversionistas institucionales","Fuera de bolsa y a personas conocidas","Exclusivamente por internet"],"Esos tres elementos la distinguen de la oferta privada, que se dirige a personas determinadas."],
+ [3,"¿Qué caracteriza a una oferta privada?",["Se dirige a inversionistas determinados (calificados o institucionales) sin medios masivos","Requiere prospecto de colocación","Se anuncia en televisión","La autoriza Banxico"],"Al no ser pública, no requiere inscripción en el RNV, aunque tiene límites y requisitos propios."],
+ [3,"¿Qué es una OPI (IPO)?",["La primera vez que una empresa ofrece sus acciones al público en bolsa","Una oferta posterior de una empresa ya listada","La recompra de acciones","El desliste de una emisora"],"La Oferta Pública Inicial convierte a la empresa en emisora; las siguientes se llaman subsecuentes (follow-on)."],
+ [3,"En una oferta pública PRIMARIA, los recursos se destinan a…",["La tesorería de la emisora","Los accionistas vendedores","La casa de bolsa","El gobierno"],"La primaria emite acciones nuevas: la empresa capta capital para proyectos."],
+ [3,"En una oferta pública SECUNDARIA…",["Accionistas existentes venden sus títulos y reciben el dinero; la empresa no capta recursos","La empresa emite acciones nuevas","Se emiten bonos","Interviene Banxico"],"Es común cuando fundadores o fondos de capital privado venden parte de su participación."],
+ [3,"Una oferta MIXTA combina…",["Acciones nuevas de la emisora y acciones de accionistas vendedores","Bonos y acciones","Oferta pública y privada","Mercado de dinero y de capitales"],"Parte de los recursos va a la tesorería y parte a los tenedores que venden."],
+ [3,"¿Qué es el prospecto preliminar o 'red herring'?",["Versión inicial del prospecto, sin precio definitivo, para promover la oferta","El prospecto final con precio","Un reporte anual","Una carta de la CNBV"],"Se llama así por la leyenda en rojo que advierte que la información puede cambiar; luego se publica el prospecto definitivo."],
+ [3,"¿Qué es el roadshow?",["Presentaciones a inversionistas potenciales para promover la emisión","El trámite ante la CNBV","La liquidación en Indeval","El cálculo del precio por la emisora"],"Durante el roadshow el colocador recoge el interés de los inversionistas."],
+ [3,"El bookbuilding (construcción del libro) sirve para…",["Registrar la demanda y los precios que aceptan los inversionistas para fijar el precio y asignar la emisión","Contabilizar la empresa","Elegir al consejo","Calcular el IPC"],"Con el libro de posturas el intermediario define precio y asignación; después se registra la operación en bolsa."],
+ [3,"¿Cuál es el orden correcto del proceso de colocación?",["Dictaminación y prospecto preliminar → roadshow y bookbuilding → prospecto definitivo y registro (cruce) en bolsa","Cruce en bolsa → roadshow → dictaminación","Bookbuilding → prospecto preliminar → dictaminación","Roadshow → dictaminación → prospecto preliminar"],"Primero se prepara y autoriza la información, luego se promueve y se forma el libro, y al final se fija precio y se cruza en bolsa."],
+ [3,"¿Qué es una S.A.P.I.?",["Sociedad Anónima Promotora de Inversión: régimen intermedio con mejores derechos de minorías, paso previo a la S.A.B.","Una sociedad de inversión","Una SOFOM","Un fideicomiso inmobiliario"],"La S.A.P.I. permite adoptar prácticas de gobierno corporativo antes de cotizar como S.A.B."],
+ [3,"¿Cuál es el número máximo de consejeros en una S.A.B.?",["21","15","11","30"],"El Consejo de Administración de una S.A.B. tiene un máximo de 21 miembros."],
+ [3,"¿Qué proporción mínima del consejo de una S.A.B. debe ser independiente?",["25 %","50 %","10 %","Ninguna"],"Al menos 25 % de los consejeros deben ser independientes para equilibrar a los accionistas de control."],
+ [3,"¿Qué comités son obligatorios en una S.A.B.?",["Auditoría y Prácticas Societarias","Riesgos y Crédito","Remuneración y Ventas","Inversión y Tesorería"],"Integrados por consejeros independientes, vigilan la información financiera y las operaciones con partes relacionadas."],
+ [3,"¿Qué figura tradicional de la S.A. sustituyen los comités en la S.A.B.?",["El comisario","El director general","La asamblea","El auditor externo"],"La vigilancia recae en los comités de Auditoría y Prácticas Societarias y en el auditor externo."],
+ [3,"En una S.A.B., accionistas con 5 % del capital pueden…",["Ejercer acción de responsabilidad contra consejeros","Designar un consejero","Oponerse judicialmente a resoluciones de la asamblea","Vetar al director general"],"Umbrales: 5 % acción de responsabilidad; 10 % designar consejero y pedir convocatoria; 20 % oposición judicial."],
+ [3,"¿Qué derecho otorga tener 10 % del capital en una S.A.B.?",["Designar y revocar a un miembro del consejo y pedir que se convoque una asamblea","Oponerse judicialmente a las resoluciones","Disolver la sociedad","Fijar el dividendo"],"Con 10 % también puede solicitar aplazar una votación sobre asuntos de los que no esté suficientemente informado."],
+ [3,"¿Qué derecho otorga tener 20 % del capital en una S.A.B.?",["Oponerse judicialmente a resoluciones de asambleas generales","Designar a todo el consejo","Ejercer acción de responsabilidad","Convocar al comité de auditoría"],"Es el umbral más alto de los derechos de minorías previstos en la LMV."],
+ [3,"El deber de lealtad de los consejeros prohíbe, entre otras cosas…",["Usar información privilegiada en beneficio propio (insider trading) y favorecer a un grupo de accionistas","Asistir a juntas","Solicitar información a la dirección","Votar en el consejo"],"El deber de diligencia exige actuar informado y de buena fe; el de lealtad, no anteponer intereses propios."],
+ [4,"¿Qué índice agrupa a 30 grandes empresas estadounidenses y se pondera por precio?",["Dow Jones Industrial Average","S&P 500","Nasdaq 100","Russell 2000"],"El Dow Jones es ponderado por precio; el S&P 500 se pondera por capitalización."],
+ [4,"¿En qué bolsa cotizan las empresas del Nasdaq 100?",["Nasdaq, con predominio de tecnología","NYSE","Bolsa de Tokio","Bolsa de Londres"],"Incluye las 100 mayores empresas no financieras listadas en Nasdaq."],
+ [4,"El Nikkei 225 corresponde a la bolsa de…",["Tokio","Londres","Fráncfort","Hong Kong"],"Nikkei 225 – Tokio; FTSE 100 – Londres; DAX – Fráncfort."],
+ [4,"El índice DAX representa a…",["Las principales empresas alemanas que cotizan en Fráncfort","Las 100 mayores del Reino Unido","Empresas japonesas","Empresas de la zona euro en general"],"El DAX amplió su muestra de 30 a 40 empresas en 2021."],
+ [4,"¿Qué es el SIC (Sistema Internacional de Cotizaciones)?",["Mecanismo para negociar en México valores extranjeros que no están inscritos en el RNV","El índice de la BMV","Una casa de bolsa","Una SIEFORE"],"Permite comprar en pesos, desde una casa de bolsa mexicana, acciones y ETFs listados en mercados extranjeros (Mercado Global)."],
+ [4,"¿Qué es un ADR?",["Un certificado emitido por un banco depositario en EE. UU. que representa acciones de una empresa extranjera","Una acción preferente mexicana","Un bono del gobierno","Un fondo de inversión"],"Los ADRs cotizan en dólares en bolsas de EE. UU. y facilitan a inversionistas de ese país invertir en emisoras extranjeras."],
+ [4,"¿Cuál NO es una causa típica de desliste de una emisora?",["Aumento sostenido de la liquidez y del interés del público","Falta de bursatilidad","Subvaluación persistente de la acción","Una compra apalancada o reestructura corporativa"],"El desliste suele ocurrir cuando cotizar no aporta valor: poca operación, precio bajo o un comprador que toma el control."],
+ [4,"Para deslistar una emisora en México, normalmente se requiere…",["Una oferta pública de adquisición (OPA) dirigida a los accionistas minoritarios","Solo un acuerdo del director general","La autorización de Banxico","Que las acciones bajen a cero"],"La OPA protege a los minoritarios dándoles la oportunidad de vender antes de que la acción deje de cotizar."],
+ [4,"¿Qué incentivo tiene una empresa para hacer una OPI?",["Acceder a capital sin deuda, dar liquidez a sus accionistas y ganar visibilidad","Evitar revelar información","Reducir la regulación","Eliminar a sus accionistas minoritarios"],"A cambio asume costos: revelación de información, gobierno corporativo y supervisión de la CNBV."],
+ [4,"¿Por qué el mercado mexicano ha tenido más deslistes que OPIs en los últimos años?",["Baja liquidez, valuaciones bajas y costos regulatorios que reducen el atractivo de cotizar","Porque está prohibido emitir acciones","Porque Banxico lo limita","Porque no existen casas de bolsa"],"Es un reto estructural: pocas emisoras, concentración de la operación y alternativas de financiamiento privado."],
+ [5,"Si un gansito costaba $10 y hoy cuesta $20, ¿qué le pasó al poder adquisitivo de $100?",["Se redujo a la mitad en términos de gansitos: antes compraba 10, hoy 5","Se duplicó","No cambió","Aumentó 50 %"],"La inflación eleva los precios y reduce la cantidad de bienes que compra el mismo dinero."],
+ [5,"Con inflación de 5 % en el año 1 y 4 % en el año 2, la inflación acumulada es…",["(1.05 × 1.04) − 1 = 9.2 %","5 % + 4 % = 9 %","4.5 %","20 %"],"La inflación se acumula de forma compuesta, no se suma."],
+ [5,"Si tu inversión rindió 8 % y la inflación fue 5 %, tu rendimiento real aproximado es…",["Cerca de 3 % (exacto: 1.08/1.05 − 1 ≈ 2.86 %)","13 %","8 %","−3 %"],"Ecuación de Fisher: (1 + nominal) = (1 + real)(1 + inflación)."],
+ [5,"¿Qué es el costo de oportunidad?",["El rendimiento que se deja de ganar en la mejor alternativa no elegida","El precio de un gansito","La comisión de la casa de bolsa","La inflación del año"],"Guardar dinero sin invertir tiene un costo: la inflación lo erosiona y se pierde el rendimiento alternativo."],
+ [5,"Según la paridad del poder de compra, si México tiene más inflación que EE. UU., a largo plazo se espera que el peso…",["Se deprecie frente al dólar","Se aprecie frente al dólar","Se mantenga fijo","Desaparezca"],"La moneda del país con mayor inflación tiende a perder valor para igualar el poder de compra entre países."],
+ [5,"¿Qué índice usa México para medir la inflación al consumidor?",["INPC, publicado por el INEGI","IPC de la BMV","UDI","TIIE"],"No confundir: el IPC de la BMV es un índice bursátil; el INPC mide precios al consumidor."],
+ [5,"¿Qué es la UDI?",["Unidad de cuenta que se ajusta diariamente con la inflación","Una acción de la BMV","Un bono gubernamental","Una tasa de interés"],"Se usa para proteger contratos y depósitos de la inflación; el seguro del IPAB se expresa en UDIs."],
+ // Ampliación con el banco del alumno
+ [1,"¿Qué nivel jerárquico ocupa la SHCP frente a la CNBV, la CNSF y la CONSAR?",["Es la autoridad máxima; las tres comisiones son órganos desconcentrados que dependen de ella","Está al mismo nivel que las comisiones","Depende de Banxico","Depende de la CNBV"],"La SHCP rige el sistema; las comisiones ejercen la supervisión técnica por sector con autonomía técnica, pero dependen de la Secretaría."],
+ [1,"¿Qué hace una Sociedad de Información Crediticia?",["Recopila y entrega historiales de crédito de personas y empresas para que los otorgantes evalúen riesgo","Otorga préstamos","Custodia valores","Cotiza acciones extranjeras"],"Integra reportes y scores con la información que envían bancos, SOFOMES, tiendas departamentales y otros otorgantes."],
+ [1,"¿Cuáles son las sociedades de información crediticia que operan en México?",["Buró de Crédito y Círculo de Crédito","CONDUSEF e IPAB","Indeval y CCV","BMV y BIVA"],"Son empresas privadas autorizadas por la SHCP y reguladas por Banxico y la CNBV."],
+ [1,"En el contexto de crédito, “SIC” significa Sociedad de Información Crediticia. En el bursátil, “SIC” significa…",["Sistema Internacional de Cotizaciones","Sociedad de Inversión de Capitales","Sistema de Información Contable","Sociedad Institucional de Corretaje"],"Es una sigla que se repite: cuidado en el examen con el contexto de la pregunta."],
+ [2,"¿Cuál es la función económica principal de una bolsa de valores?",["Canalizar el ahorro de los agentes superavitarios hacia empresas y gobiernos deficitarios mediante valores negociables","Captar depósitos del público","Fijar la tasa de interés","Asegurar depósitos"],"La bolsa facilita la emisión (mercado primario) y la negociación posterior (mercado secundario), dando liquidez y formación de precios."],
+ [2,"Según la LMV, ¿quién es el intermediario autorizado para ejecutar órdenes bursátiles por cuenta de terceros?",["La casa de bolsa","La emisora","Banxico","El Indeval"],"El inversionista no opera directamente en la bolsa: envía sus órdenes a través de una casa de bolsa."],
+ [2,"¿Cómo se relaciona un enrutador de órdenes (smart order router) con la Mejor Ejecución?",["Envía automáticamente cada orden a la bolsa (BMV o BIVA) con mejores condiciones de precio y volumen","Bloquea las órdenes de BIVA","Calcula el IPC","Liquida las operaciones en Indeval"],"Es la herramienta tecnológica con la que las casas de bolsa cumplen la obligación de buscar la mejor ejecución."],
+ [3,"¿Cuál de estos NO es un requisito para listar acciones en bolsa en México?",["Tener al menos 10 años de utilidades consecutivas","Inscribir los valores en el Registro Nacional de Valores (RNV) de la CNBV","Adoptar el régimen de S.A.B. o S.A.P.I.B.","Presentar estados financieros dictaminados por un auditor externo independiente"],"La ley exige registro, gobierno corporativo y revelación de información auditada; no un historial fijo de utilidades."],
+ [3,"¿Qué es una S.A.P.I.B.?",["Una S.A.P.I. que inscribe valores en bolsa y debe transitar al régimen de S.A.B. en un plazo determinado","Una SOFOM bursátil","Un fondo de inversión","Una sociedad sin consejo de administración"],"Es la vía gradual para cotizar adoptando poco a poco el gobierno corporativo completo de la S.A.B."],
+ [3,"En una emisión de Certificados Bursátiles (deuda), ¿qué dictámenes previos son indispensables?",["Calificación crediticia de una agencia calificadora y opinión legal independiente","Solo el visto bueno de Banxico","El voto del 20 % de los accionistas","Una OPA"],"La calificación informa el riesgo de crédito al inversionista; la opinión legal confirma la validez de la emisión."],
+ [3,"¿Por qué una empresa rentable y con buen flujo (como La Casa de Toño) podría preferir financiamiento privado en lugar de una IPO?",["Para conservar el control, evitar los costos de revelación y regulación y no diluir a sus dueños","Porque está prohibido que empresas rentables coticen","Porque la deuda privada siempre es más barata que cualquier otra fuente","Porque las IPO no generan recursos"],"Si la empresa puede crecer con flujo propio, crédito o socios estratégicos, los costos de ser pública pueden superar los beneficios."],
+ [5,"¿Qué ilustra la llamada “Teoría del Gansito”?",["Cómo sube el precio de un mismo producto con el tiempo, mostrando la pérdida de poder adquisitivo del dinero","Cómo se calcula el IPC","Por qué los bancos cobran comisiones","Cómo funciona una OPI"],"Usa un producto cotidiano como medida para ver la inflación acumulada y el costo de mantener el dinero inactivo."],
+ [5,"¿Qué es el poder de fijación de precios (pricing power) en una empresa de consumo básico?",["La capacidad de trasladar aumentos de costos al precio sin perder volumen de ventas","La capacidad de bajar precios para ganar mercado","El control de la tasa de inflación","El derecho de fijar el precio de su acción"],"Marcas fuertes protegen sus márgenes en entornos inflacionarios; por eso se valoran como defensivas."],
+ [5,"Si el salario mínimo sube más que el precio de un producto, ¿por qué el ahorro inactivo sigue perdiendo poder adquisitivo?",["Porque el dinero guardado no crece: su valor nominal es fijo mientras los precios suben","Porque el salario no afecta los precios","Porque el ahorro paga impuestos","No pierde: gana poder adquisitivo"],"El aumento salarial beneficia al ingreso futuro, no al saldo ya ahorrado sin rendimiento."],
+ [5,"Un Udibono paga una tasa real. ¿Qué significa?",["El principal está en UDIs, así que se ajusta con la inflación y la tasa pagada es adicional a ella","Paga una tasa fija sin importar la inflación","Paga intereses en dólares","No paga intereses"],"Tasa nominal ≈ tasa real + inflación; el Udibono protege al inversionista contra la inflación."],
+ [6,"¿Cómo se relacionan la UPA y el P/U?",["UPA = Utilidad neta / Acciones; P/U = Precio por acción / UPA","UPA = Precio / Acciones; P/U = UPA / Precio","UPA = Ventas / Acciones; P/U = Precio × UPA","P/U = Capitalización / Ventas"],"El P/U indica cuántas veces se paga la utilidad por acción; equivale a Capitalización / Utilidad neta."],
+ [6,"¿Qué mide el múltiplo Precio / Valor en libros (P/VL)?",["Cuántas veces paga el mercado el capital contable por acción","El rendimiento del activo","La liquidez de la empresa","El crecimiento de ventas"],"P/VL = Precio por acción / (Capital contable / Acciones)."],
+ [6,"Un P/VL menor a 1 puede indicar…",["Que el mercado valora la empresa por debajo de su capital contable: posible subvaluación o expectativa de bajo ROE","Que la empresa tiene pérdidas siempre","Que está sobrevaluada","Que no tiene deuda"],"Un P/VL alto, en cambio, suele reflejar alto ROE esperado o activos intangibles no registrados."],
+ [6,"¿Qué se resta a las ventas para llegar al margen bruto, al EBITDA y al EBIT, respectivamente?",["Costo de ventas; además gastos operativos; además depreciación y amortización","Impuestos; intereses; costo de ventas","Depreciación; costo de ventas; intereses","Intereses; impuestos; dividendos"],"Bruto = Ventas − Costo; EBITDA = Bruto − Gastos de operación (sin D&A); EBIT = EBITDA − D&A."],
+ [6,"¿Por qué los días de cobro usan Ventas y no Costo de ventas?",["Porque las cuentas por cobrar están registradas a precio de venta","Porque las ventas siempre son menores","Por disposición de la CNBV","Porque el costo no aparece en resultados"],"Se compara cada saldo con el flujo que lo origina en la misma base: CxC (precio de venta) con Ventas; Inventario y Proveedores (a costo) con Costo de ventas."],
+ [6,"¿Por qué el ROA usa activo total promedio?",["Porque la utilidad se genera durante el año con los activos que hubo en todo el periodo, no solo al cierre","Para reducir el resultado","Porque el activo de cierre no existe","Por convención fiscal"],"El promedio corrige distorsiones cuando el activo crece o se reduce durante el año."],
+ [6,"Según DuPont, ¿cómo puede el multiplicador del capital inflar el ROE respecto al ROA?",["ROE = ROA × Multiplicador; más deuda eleva el multiplicador y el ROE sin mejorar la operación","Reduciendo el margen neto","Aumentando la rotación","Disminuyendo el pasivo"],"Un ROE alto por apalancamiento conlleva mayor riesgo financiero."],
+ [7,"¿Cuáles son las tres secciones del estado de flujos de efectivo?",["Operación, inversión y financiamiento","Ventas, costos y gastos","Activo, pasivo y capital","Corto, mediano y largo plazo"],"Operación: efectivo del negocio; inversión: compra/venta de activos (capex); financiamiento: deuda, capital y dividendos."],
+ [7,"Pagar dividendos y amortizar deuda se registra en la sección de…",["Financiamiento","Operación","Inversión","Resultados"],"Son flujos con los proveedores de capital."],
+ [7,"La compra de maquinaria (capex) se registra en la sección de…",["Inversión","Operación","Financiamiento","Capital contable"],"El FCF aproximado resta este flujo de inversión al flujo de operación."],
+ [7,"¿Cómo se calcula el flujo de efectivo libre aproximado?",["Flujo de operación − Capex","Utilidad neta + Capex","EBITDA − Intereses","Ventas − Costo de ventas"],"Es el efectivo disponible después de mantener y ampliar los activos, para pagar deuda o repartir a accionistas."],
+ [7,"Una empresa reporta utilidad neta positiva pero FCF negativo. ¿Cuál es una causa válida?",["Aumento fuerte de cuentas por cobrar e inventarios o un capex elevado","Que la utilidad incluye la depreciación","Que pagó dividendos","Que bajó su deuda"],"La utilidad usa base devengado; el efectivo se consume en capital de trabajo y en inversión."],
+ [7,"¿Por qué el valor presente de los FCF futuros descontados al WACC equivale al Enterprise Value?",["Porque esos flujos pertenecen a todos los proveedores de capital (deuda y acciones) y el WACC pondera el costo de ambos","Porque el WACC es la tasa de Banxico","Porque solo incluye a los accionistas","Porque el FCF ya descuenta la deuda"],"Flujo para toda la empresa + tasa de toda la empresa = valor de toda la empresa (EV)."],
+ [7,"¿Cómo se obtiene el precio intrínseco por acción a partir del EV?",["(EV − Deuda neta) / Acciones en circulación","(EV + Deuda neta) / Acciones","EV / EBITDA","EV × Acciones"],"Equity Value = EV − (Deuda − Efectivo); dividido entre las acciones da el valor por acción, que se compara con el precio de mercado."],
+ [7,"Si el EV no cambia y la deuda neta aumenta, el valor del capital (Equity Value)…",["Disminuye","Aumenta","No cambia","Se duplica"],"Equity = EV − Deuda neta: una mayor parte del valor pertenece a los acreedores."],
+ [7,"Si el WACC aumenta, el valor presente de los flujos (EV)…",["Disminuye","Aumenta","No cambia","Se vuelve negativo"],"Una tasa de descuento mayor reduce el valor presente de los flujos futuros."]
+];
+const TS={};try{Object.assign(TS,JSON.parse(localStorage.getItem("pfaTeo")||"{}"))}catch(e){}
+const tsv=()=>{try{localStorage.setItem("pfaTeo",JSON.stringify(TS))}catch(e){}};
+let tTopic=0;const T={};let tT=null;
+function tTopics(){const box=document.getElementById("tTopics");box.innerHTML="";TT.forEach((n,i)=>{
+  const qs=TQ.map((q,j)=>j).filter(j=>i===0||TQ[j][0]===i);const ok=qs.filter(j=>TS[j]===1).length,bad=qs.filter(j=>TS[j]===0).length;
+  const b=document.createElement("button");b.className="lv";b.setAttribute("aria-pressed",i===tTopic);
+  b.innerHTML=`<span class="n">${qs.length} preguntas</span><span class="t">${n}</span><span class="note" style="font-size:.8rem">${ok} dominadas · ${bad} por repasar</span>`;
+  b.onclick=()=>{tTopic=i;tTopics()};box.appendChild(b)})}
+function tStart(){
+  let qs=TQ.map((q,j)=>j).filter(j=>tTopic===0||TQ[j][0]===tTopic);const set=document.getElementById("tSet").value;
+  if(set==="wrong")qs=qs.filter(j=>TS[j]===0);qs=shuf(qs);if(set==="10")qs=qs.slice(0,10);
+  const card=document.getElementById("tCard");card.hidden=false;
+  if(!qs.length){card.innerHTML=`<p class="qtext">No hay preguntas falladas en este tema. Elige otra opción.</p>`;return}
+  Object.assign(T,{qs,i:0,ok:0});tShow();card.scrollIntoView({behavior:"smooth"});
+}
+function tShow(){
+  const card=document.getElementById("tCard");const j=T.qs[T.i];const [t,q,o,e]=TQ[j];const opts=shuf(o);T.cur={j,opts,right:o[0],done:false};
+  const timed=document.getElementById("tMode").value==="timed";
+  card.innerHTML=`<div class="sec-head"><span class="tier">${TT[t]}</span><span class="score">${T.i+1} / ${T.qs.length} · ${T.ok} aciertos</span></div>
+   <p class="qtext" style="font-size:1.1rem">${q}</p>${timed?`<div class="tbar"><i id="ttb" style="width:100%"></i></div>`:""}
+   <div style="display:grid;gap:8px">${opts.map((x,k)=>`<button class="topt" data-k="${k}" style="all:unset;cursor:pointer;border:1px solid var(--line);border-radius:8px;padding:10px 14px;background:var(--bg);display:flex;gap:10px"><b style="font-family:var(--mono);color:var(--muted)">${"ABCD"[k]}</b><span>${x}</span></button>`).join("")}</div><div id="tFb"></div>`;
+  card.querySelectorAll(".topt").forEach(b=>b.onclick=()=>tAns(+b.dataset.k));
+  clearInterval(tT);if(timed){let left=35;tT=setInterval(()=>{left-=.1;const el=document.getElementById("ttb");if(el){el.style.width=left/35*100+"%";el.classList.toggle("low",left<9)}if(left<=0)tAns(-1)},100)}
+}
+function tAns(k){
+  const c=T.cur;if(c.done)return;c.done=true;clearInterval(tT);const ok=k>=0&&c.opts[k]===c.right;TS[c.j]=ok?1:0;tsv();if(ok)T.ok++;
+  document.querySelectorAll(".topt").forEach((b,m)=>{b.disabled=true;b.style.cursor="default";if(c.opts[m]===c.right){b.style.borderColor="var(--ok)";b.style.background="var(--ok-soft)"}else if(m===k){b.style.borderColor="var(--bad)";b.style.background="var(--bad-soft)"}});
+  const last=T.i>=T.qs.length-1;
+  document.getElementById("tFb").innerHTML=`<div class="fb ${ok?"ok":"bad"}"><b>${ok?"Correcto.":k<0?"Tiempo agotado.":"Incorrecto."}</b><p style="margin:6px 0 0">${TQ[c.j][3]}</p></div>
+   <div class="btns">${last?`<span class="score">Resultado: ${T.ok} / ${T.qs.length}</span><button class="b" id="tAgain">Otra ronda</button>`:`<button class="b" id="tNext">Siguiente</button>`}</div>`;
+  const n=document.getElementById("tNext");if(n){n.onclick=()=>{T.i++;tShow()};n.focus()}
+  const a=document.getElementById("tAgain");if(a)a.onclick=tStart;tTopics();
+}
+document.addEventListener("keydown",e=>{if(document.getElementById("viewTeo").hidden||!T.cur||T.cur.done||/INPUT|SELECT|TEXTAREA/.test(document.activeElement.tagName))return;const i="abcd1234".indexOf(e.key.toLowerCase());if(i>=0)tAns(i%4)});
+document.getElementById("tGo").onclick=tStart;
+document.getElementById("tReset").onclick=e=>{if(e.target.dataset.c){for(const k in TS)delete TS[k];tsv();tTopics();e.target.textContent="Reiniciar avance";delete e.target.dataset.c}else{e.target.dataset.c=1;e.target.textContent="Confirmar: borrar avance"}};
+tTopics();
+</script>
+
+</body>
+</html>
